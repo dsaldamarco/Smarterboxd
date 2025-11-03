@@ -38,6 +38,10 @@ struct ContentView: View {
     @State private var isSpinning: Bool = false
     @State private var randomSourceText: String = ""
     
+    // --- NOVITÀ: Dettagli per il film scelto a caso ---
+    @State private var randomPosterURL: URL? = nil
+    @State private var randomOverview: String? = nil
+    
     
     // --- PROPRIETÀ CALCOLATA ---
     // Questa è la lista che la UI mostrerà
@@ -213,43 +217,75 @@ struct ContentView: View {
         }
     }
     
-    // La vista per la modalità Random
+    // --- VISTA RANDOM (MODIFICATA) ---
     private var randomView: some View {
         VStack {
             Spacer()
             
             if isSpinning {
-                // Animazione di caricamento
-                ProgressView()
-                    .scaleEffect(2) // Più grande
-                    .padding()
-                Text("Giro la ruota...")
-                    .font(.title2)
-                    .foregroundColor(.secondary)
-                    .transition(.opacity)
+                // --- MODIFICATO ---
+                // Sostituito il blocco ProgressView con la nuova SpinnerView
+                SpinnerView()
+                // --- FINE MODIFICA ---
                 
+            // --- LAYOUT MODIFICATO DOPO LA SCELTA ---
             } else if let movie = pickedMovie {
-                // Mostra il film scelto
-                Text("Il film scelto \(randomSourceText) è:") // Testo dinamico
-                    .font(.title2)
-                    .foregroundColor(.secondary)
-                    .padding(.bottom, 10)
                 
-                // Riutilizziamo la MovieRowView
-                MovieRowView(
-                    movie: movie,
-                    isRanked: rankedMovieIDs.contains(movie.id),
-                    rank: nil, // Nessun numero qui
-                    onTogglePriority: {
-                        withAnimation {
-                            togglePriority(for: movie)
-                        }
+                VStack(spacing: 15) {
+                    Text("Il film scelto \(randomSourceText) è:")
+                        .font(.title3)
+                        .foregroundColor(.secondary)
+                        .padding(.bottom, 5)
+
+                    // 1. Locandina Grande
+                    AsyncImage(url: randomPosterURL) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .cornerRadius(12)
+                            .shadow(radius: 10)
+                    } placeholder: {
+                        Rectangle()
+                            .foregroundColor(.gray.opacity(0.2))
+                            .aspectRatio(CGSize(width: 2, height: 3), contentMode: .fit)
+                            .cornerRadius(12)
+                            .overlay(Image(systemName: "film").foregroundColor(.gray.opacity(0.5)))
                     }
-                )
-                .padding()
-                .background(Color(.secondarySystemBackground))
-                .cornerRadius(10)
-                .padding(.horizontal)
+                    .frame(maxHeight: 250) // Altezza max per la locandina
+                    .padding(.horizontal, 60) // Stringe per farla risaltare
+                    
+                    // 2. Titolo
+                    Text(movie.title)
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                    
+                    // 3. Anno (Quadratino)
+                    // Questa view è definita in MovieDetailView.swift
+                    InfoBlockView(title: "ANNO", value: movie.year, color: .blue)
+                        .padding(.horizontal, 40)
+                    
+                    // 4. Trama
+                    if let overview = randomOverview, !overview.isEmpty {
+                        ScrollView(showsIndicators: false) {
+                            Text(overview)
+                                .font(.body)
+                                .foregroundColor(.secondary)
+                                .padding(.horizontal, 20)
+                        }
+                        .frame(maxHeight: 100) // Limita l'altezza della trama
+                    } else if isSpinning == false {
+                        // Mostra un loader solo se NON stiamo girando
+                        // (cioè, stiamo caricando i dettagli)
+                        ProgressView()
+                            .padding()
+                    }
+                }
+                .transition(.opacity)
+                .task(id: movie.id) { // <-- .task si ri-esegue quando movie.id cambia
+                    await loadRandomMovieDetails(movie: movie)
+                }
                 
             } else {
                 // Messaggio iniziale
@@ -362,25 +398,53 @@ struct ContentView: View {
         }
         
         isSpinning = true
-        pickedMovie = nil // Nasconde il film precedente
+        // --- MODIFICA ---
+        // Resettiamo TUTTO qui, per un'animazione pulita
+        await MainActor.run {
+            withAnimation(.easeInOut) {
+                pickedMovie = nil
+                randomPosterURL = nil
+                randomOverview = nil
+            }
+        }
         
         do {
             // Aspetta 1 secondo (1 miliardo di nanosecondi)
             try await Task.sleep(nanoseconds: 1_000_000_000)
         } catch {}
         
+        // L'impostazione di pickedMovie qui
+        // farà apparire il nuovo blocco in randomView
         if fromRanked {
-            // --- MODIFICA 1: Scegli dalla CLASSIFICA ---
             if let randomID = rankedMovieIDs.randomElement() {
                 self.pickedMovie = movieLookup[randomID]
                 self.randomSourceText = "dalla tua classifica"
             }
         } else {
-            // --- MODIFICA 2: Scegli da TUTTI ---
             self.pickedMovie = allMovies.randomElement()
             self.randomSourceText = "dalla tua lista"
         }
         
         isSpinning = false
     }
+    
+    // --- NOVITÀ ---
+    // Carica i dettagli per il film scelto a caso
+    func loadRandomMovieDetails(movie: Movie) async {
+        // Chiama il service
+        let details = await PosterService.shared.fetchMovieExtras(
+            title: movie.title,
+            year: movie.year
+        )
+        
+        // Aggiorna lo stato sulla Main Thread
+        await MainActor.run {
+            withAnimation {
+                self.randomPosterURL = details?.largePosterURL
+                self.randomOverview = details?.overview
+            }
+        }
+    }
 }
+
+
