@@ -111,7 +111,19 @@ struct ContentView: View {
     // --- VISTA ---
     var body: some View {
         NavigationView {
-            VStack {
+            // --- MODIFICATO: Aggiunto spacing: 0 ---
+            VStack(spacing: 0) {
+                
+                // --- NOVITÀ: Titolo personalizzato ---
+                Text("Betterboxd")
+                    // Titolo
+                
+                    .font(.custom("SharpGrotesk-SemiBold20", size: 34))
+                    .fontWeight(.bold) // Fallback
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal)
+                    .padding(.bottom, 5) // Spazio prima del contenuto
+                
                 // Se c'è un errore, mostralo
                 if let errorMessage = errorMessage {
                     Text(errorMessage)
@@ -130,7 +142,7 @@ struct ContentView: View {
                     // --- SEGMENTED CONTROL ---
                     Picker("Visualizza", selection: $currentView.animation()) {
                         Text("Tutti").tag(ViewType.all)
-                        Text("Mia Classifica").tag(ViewType.ranked)
+                        Text("Filmello").tag(ViewType.ranked)
                         Text("Random").tag(ViewType.random)
                     }
                     .pickerStyle(.segmented)
@@ -151,7 +163,10 @@ struct ContentView: View {
                     }
                 }
             }
-            .navigationTitle("Watchlist") // Titolo della barra
+            // --- MODIFICATO: Nascondi il titolo di default ---
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+            // --- FINE MODIFICA ---
             .onAppear {
                 // Carica i dati 1 sola volta quando la vista appare
                 if allMovies.isEmpty {
