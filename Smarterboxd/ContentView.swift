@@ -27,7 +27,16 @@ struct ContentView: View {
     @State private var allMovies: [Movie] = [] // Lista completa dal CSV
     @State private var movieLookup: [String: Movie] = [:] // Per trovare film per ID
     @State private var currentSort: SortType = .byDateAdded // Ordinamento (solo per la vista "Tutti")
-    @State private var rankedMovieIDs: [String] = [] // Array ordinato degli ID
+    
+    // Memoria a lungo termine (salvata su disco)
+    @State private var rankedMovieIDs: [String] = []
+    
+    // --- NOVITÀ ---
+    // Un Set per tenere traccia dei film cancellati.
+    // Usiamo un Set perché è più veloce per controllare se un ID esiste.
+    @State private var deletedMovieIDs: Set<String> = []
+    // --- FINE NOVITÀ ---
+    
     @State private var currentView: ViewType = .all // Stato del SegmentedControl
     @State private var errorMessage: String? = nil // Eventuale errore
     
@@ -38,7 +47,7 @@ struct ContentView: View {
     @State private var isSpinning: Bool = false
     @State private var randomSourceText: String = ""
     
-    // --- NOVITÀ: Dettagli per il film scelto a caso ---
+    // Dettagli per il film scelto a caso
     @State private var randomPosterURL: URL? = nil
     @State private var randomOverview: String? = nil
     
@@ -46,6 +55,10 @@ struct ContentView: View {
     // --- PROPRIETÀ CALCOLATA ---
     // Questa è la lista che la UI mostrerà
     var moviesToShow: [Movie] {
+        
+        // --- MODIFICATO ---
+        // 'allMovies' ora contiene solo film validi (non cancellati),
+        // quindi non dobbiamo filtrare di nuovo qui.
         
         switch currentView {
         
@@ -122,9 +135,23 @@ struct ContentView: View {
             .onAppear {
                 // Carica i dati 1 sola volta quando la vista appare
                 if allMovies.isEmpty {
-                    loadData() // Chiama la funzione locale
+                    loadData() // Carica i film E i film cancellati
+                    
+                    // Carica la classifica salvata
+                    self.rankedMovieIDs = loadRankedIDs()
                 }
             }
+            // Aggiunto .onChange per salvare la classifica
+            // ogni volta che 'rankedMovieIDs' cambia
+            .onChange(of: rankedMovieIDs) { newIDs in
+                saveRankedIDs(newIDs)
+            }
+            // --- NOVITÀ ---
+            // Salva i film cancellati ogni volta che il Set cambia
+            .onChange(of: deletedMovieIDs) { newIDs in
+                saveDeletedIDs(newIDs)
+            }
+            // --- FINE NOVITÀ ---
             .toolbar {
                 // --- GRUPPO 1: Bottoni di Layout e Modifica
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
@@ -189,6 +216,9 @@ struct ContentView: View {
                 }
             }
             .onMove(perform: movePriority)
+            // --- NOVITÀ: Gesto di cancellazione ---
+            .onDelete(perform: deleteMovie)
+            // --- FINE NOVITÀ ---
         }
         .listStyle(.plain) // Stile pulito
     }
@@ -355,15 +385,24 @@ struct ContentView: View {
     
     // --- FUNZIONI LOGICHE ---
     
-    // Carica i dati dal CSV
+    // --- MODIFICATO ---
+    // Carica i dati dal CSV E filtra quelli cancellati
     func loadData() {
+        // 1. Carica gli ID dei film cancellati dal disco
+        let loadedDeletedIDsArray = UserDefaults.standard.array(forKey: "deletedMovieIDs") as? [String] ?? []
+        let deletedIDsSet = Set(loadedDeletedIDsArray)
+        self.deletedMovieIDs = deletedIDsSet
+        
         do {
-            let loadedMovies = try CSVParser.loadMovies(from: "watchlist")
-            self.allMovies = loadedMovies
+            // 2. Carica TUTTI i film dal CSV
+            let allLoadedMovies = try CSVParser.loadMovies(from: "watchlist")
             
-            // Crea un "dizionario" per trovare velocemente
-            // un film partendo dal suo ID.
-            self.movieLookup = Dictionary(uniqueKeysWithValues: loadedMovies.map { ($0.id, $0) })
+            // 3. Filtra i film, tenendo solo quelli NON cancellati
+            let validMovies = allLoadedMovies.filter { !deletedIDsSet.contains($0.id) }
+            
+            // 4. Imposta lo stato dell'app con i soli film validi
+            self.allMovies = validMovies
+            self.movieLookup = Dictionary(uniqueKeysWithValues: validMovies.map { ($0.id, $0) })
             
         } catch {
             self.errorMessage = error.localizedDescription
@@ -384,6 +423,24 @@ struct ContentView: View {
     // Chiamata quando l'utente trascina un film nella classifica
     func movePriority(from source: IndexSet, to destination: Int) {
         rankedMovieIDs.move(fromOffsets: source, toOffset: destination)
+    }
+    
+    // --- NOVITÀ: Funzione per cancellare un film ---
+    func deleteMovie(at offsets: IndexSet) {
+        // 1. Scopri quali film sono stati selezionati
+        //    (usa 'moviesToShow' perché è la fonte della lista)
+        let moviesToDelete = offsets.map { moviesToShow[$0] }
+        
+        for movie in moviesToDelete {
+            // 2. Aggiungi l'ID ai film cancellati (il .onChange lo salverà)
+            deletedMovieIDs.insert(movie.id)
+            
+            // 3. Rimuovi il film da tutte le liste in memoria
+            //    per far aggiornare subito la UI
+            allMovies.removeAll { $0.id == movie.id }
+            movieLookup.removeValue(forKey: movie.id)
+            rankedMovieIDs.removeAll { $0 == movie.id }
+        }
     }
     
     // Gestisce l'animazione e la scelta del film random
@@ -445,6 +502,33 @@ struct ContentView: View {
             }
         }
     }
-}
+    
+    // --- FUNZIONI DI SALVATAGGIO (NOVITÀ) ---
 
+    // Salva l'array della classifica su disco
+    private func saveRankedIDs(_ ids: [String]) {
+        // UserDefaults è il modo più semplice per salvare
+        // piccoli dati come un array di stringhe.
+        UserDefaults.standard.set(ids, forKey: "rankedMovieIDs")
+    }
+    
+    // Carica l'array della classifica dal disco
+    private func loadRankedIDs() -> [String] {
+        // Carica i dati salvati, o restituisce un array vuoto
+        // se non trova nulla.
+        return UserDefaults.standard.array(forKey: "rankedMovieIDs") as? [String] ?? []
+    }
+    
+    // --- NOVITÀ: Funzioni di salvataggio per i film cancellati ---
+    
+    // Salva il Set di ID cancellati su disco (convertendolo in Array)
+    private func saveDeletedIDs(_ ids: Set<String>) {
+        let array = Array(ids)
+        UserDefaults.standard.set(array, forKey: "deletedMovieIDs")
+    }
+    
+    // (Questa funzione non serve più, loadData se ne occupa)
+    // private func loadDeletedIDs() -> Set<String> { ... }
+    
+}
 
