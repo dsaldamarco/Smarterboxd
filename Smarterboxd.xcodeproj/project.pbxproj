@@ -10,9 +10,22 @@
 		54D674742EB8F30C003721D2 /* Smarterboxd.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Smarterboxd.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		54D674A12EB90CF4003721D2 /* Exceptions for "Smarterboxd" folder in "Smarterboxd" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 54D674732EB8F30C003721D2 /* Smarterboxd */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		54D674762EB8F30C003721D2 /* Smarterboxd */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				54D674A12EB90CF4003721D2 /* Exceptions for "Smarterboxd" folder in "Smarterboxd" target */,
+			);
 			path = Smarterboxd;
 			sourceTree = "<group>";
 		};
@@ -256,6 +269,8 @@
 				DEVELOPMENT_TEAM = 6KC29BVV5G;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Smarterboxd/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Betterboxd;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -288,6 +303,8 @@
 				DEVELOPMENT_TEAM = 6KC29BVV5G;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Smarterboxd/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Betterboxd;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

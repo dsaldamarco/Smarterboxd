@@ -42,7 +42,7 @@ struct MovieRowView: View {
             VStack(alignment: .leading) {
                 Text(movie.title)
                     .font(.headline)
-                Text("Uscita: \(movie.year) | Aggiunto: \(movie.dateAdded)")
+                Text("Anno: \(movie.year) | Aggiunto: \(movie.dateAdded)")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }

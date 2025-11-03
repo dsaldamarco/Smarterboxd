@@ -49,9 +49,11 @@ struct ContentView: View {
     @State private var randomPosterURL: URL? = nil
     @State private var randomOverview: String? = nil
     
-    // --- NOVITÀ: Testo della barra di ricerca ---
-    @State private var searchText: String = ""
+    // --- NOVITÀ: Stato per il regista ---
+    @State private var randomDirector: String? = nil
     // --- FINE NOVITÀ ---
+    
+    @State private var searchText: String = ""
     
     
     // --- PROPRIETÀ CALCOLATA ---
@@ -335,9 +337,17 @@ struct ContentView: View {
                             .multilineTextAlignment(.center)
                             .padding(.horizontal)
                         
-                        // 3. Anno (Quadratino)
-                        InfoBlockView(title: "ANNO", value: movie.year, color: .blue)
-                            .padding(.horizontal, 40)
+                        // 3. Info (Anno e Regista)
+                        HStack(spacing: 10) {
+                            InfoBlockView(title: "ANNO", value: movie.year, color: .blue)
+                            
+                            // --- NOVITÀ: Blocco Regista ---
+                            if let director = randomDirector {
+                                InfoBlockView(title: "DIRETTO DA", value: director, color: .green)
+                            }
+                            // --- FINE NOVITÀ ---
+                        }
+                        .padding(.horizontal, 40)
                         
                         // 4. Trama
                         if let overview = randomOverview, !overview.isEmpty {
@@ -346,6 +356,7 @@ struct ContentView: View {
                                 .font(.body)
                                 .foregroundColor(.secondary)
                                 .padding(.horizontal, 20)
+                                .padding(.top) // Aggiunge spazio
                             // --- MODIFICA: Rimosso .frame(maxHeight: 100)
                             
                         } else if isSpinning == false {
@@ -562,6 +573,7 @@ struct ContentView: View {
                 pickedMovie = nil
                 randomPosterURL = nil
                 randomOverview = nil
+                randomDirector = nil // <-- NOVITÀ: Resetta il regista
             }
         }
         
@@ -576,8 +588,8 @@ struct ContentView: View {
         isSpinning = false
     }
     
-    // --- NOVITÀ ---
-    // Carica i dettagli per il film scelto a caso
+    // --- MODIFICATO ---
+    // Carica i dettagli (inclusa la trama e il regista)
     func loadRandomMovieDetails(movie: Movie) async {
         // Chiama il service
         let details = await PosterService.shared.fetchMovieExtras(
@@ -590,6 +602,7 @@ struct ContentView: View {
             withAnimation {
                 self.randomPosterURL = details?.largePosterURL
                 self.randomOverview = details?.overview
+                self.randomDirector = details?.director // <-- NOVITÀ: Salva il regista
             }
         }
     }

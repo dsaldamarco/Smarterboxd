@@ -1,12 +1,15 @@
 import SwiftUI
 
 // MARK: - 7. VISTA DETTAGLIO FILM
+// --- MODIFICATO ---
+// Aggiunto il regista
 
 struct MovieDetailView: View {
     let movie: Movie
     
     @State private var posterURL: URL? = nil
     @State private var overview: String? = nil
+    @State private var director: String? = nil // <-- NOVITÀ: Stato per il regista
     @State private var isLoading: Bool = true
     
     var body: some View {
@@ -35,13 +38,20 @@ struct MovieDetailView: View {
                         .font(.largeTitle)
                         .fontWeight(.bold)
                     
-                    // --- BLOCCHI INFO (NOVITÀ) ---
-                    HStack(spacing: 10) {
+                    // --- BLOCCHI INFO (MODIFICATO) ---
+                    // Ora in un LazyVGrid per adattarsi
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                         // Blocco Anno
                         InfoBlockView(title: "ANNO", value: movie.year, color: .blue)
                         
                         // Blocco Aggiunto
                         InfoBlockView(title: "AGGIUNTO IL", value: movie.dateAdded, color: .green)
+                        
+                        // --- NOVITÀ: Blocco Regista ---
+                        if let director = director {
+                            InfoBlockView(title: "DIRETTO DA", value: director, color: .orange)
+                        }
+                        // --- FINE NOVITÀ ---
                     }
                     
                     // --- TRAMA (NOVITÀ) ---
@@ -79,6 +89,7 @@ struct MovieDetailView: View {
         }
     }
     
+    // --- MODIFICATO ---
     // Funzione per chiamare il PosterService
     private func loadDetails() async {
         let details = await PosterService.shared.fetchMovieExtras(
@@ -90,12 +101,16 @@ struct MovieDetailView: View {
         await MainActor.run {
             self.posterURL = details?.largePosterURL
             self.overview = details?.overview
+            self.director = details?.director // <-- NOVITÀ: Salva il regista
             self.isLoading = false // Finito di caricare
         }
     }
 }
 
-// MARK: - Vista Helper per i blocchi info
+
+// MARK: - VISTA BLOCCO INFO (Helper)
+// (Definita qui, così sia ContentView che MovieDetailView possono usarla)
+
 struct InfoBlockView: View {
     let title: String
     let value: String
@@ -109,10 +124,13 @@ struct InfoBlockView: View {
             Text(value)
                 .font(.headline)
                 .fontWeight(.bold)
+                .lineLimit(2) // Permette al nome del regista di andare a capo
+                .fixedSize(horizontal: false, vertical: true) // Evita che il testo venga tagliato
         }
         .padding(10)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: 60, alignment: .leading)
         .background(color.opacity(0.1))
         .cornerRadius(8)
     }
 }
+
