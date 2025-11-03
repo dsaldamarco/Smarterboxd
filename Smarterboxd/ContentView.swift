@@ -270,6 +270,10 @@ struct ContentView: View {
                         MovieCardView(
                             movie: movie,
                             isRanked: rankedMovieIDs.contains(movie.id),
+                            // --- QUESTA È LA CORREZIONE ---
+                            // Passiamo il 'rank' (numero) alla MovieCardView
+                            rank: (currentView == .ranked) ? (rankedMovieIDs.firstIndex(of: movie.id)) : nil,
+                            // --- FINE CORREZIONE ---
                             onTogglePriority: {
                                 withAnimation {
                                     togglePriority(for: movie)
@@ -287,73 +291,79 @@ struct ContentView: View {
     // --- VISTA RANDOM (MODIFICATA) ---
     private var randomView: some View {
         VStack {
-            Spacer()
+            // --- MODIFICATO ---
+            // Rimosso Spacer() per dare spazio alla ScrollView
             
             if isSpinning {
-                // Sostituito il blocco ProgressView con la nuova SpinnerView
+                Spacer() // Centra lo spinner
                 SpinnerView()
+                Spacer() // Centra lo spinner
                 
-            // --- LAYOUT MODIFICATO DOPO LA SCELTA ---
             } else if let movie = pickedMovie {
                 
-                VStack(spacing: 15) {
-                    Text("Il film scelto \(randomSourceText) è:")
-                        .font(.title3)
-                        .foregroundColor(.secondary)
-                        .padding(.bottom, 5)
+                // --- MODIFICA ---
+                // L'intero contenuto ora è in una ScrollView
+                ScrollView {
+                    VStack(spacing: 15) {
+                        Text("Il film scelto \(randomSourceText) è:")
+                            .font(.title3)
+                            .foregroundColor(.secondary)
+                            .padding(.bottom, 5)
 
-                    // 1. Locandina Grande
-                    AsyncImage(url: randomPosterURL) { image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .cornerRadius(12)
-                            .shadow(radius: 10)
-                    } placeholder: {
-                        Rectangle()
-                            .foregroundColor(.gray.opacity(0.2))
-                            .aspectRatio(CGSize(width: 2, height: 3), contentMode: .fit)
-                            .cornerRadius(12)
-                            .overlay(Image(systemName: "film").foregroundColor(.gray.opacity(0.5)))
-                    }
-                    .frame(maxHeight: 250) // Altezza max per la locandina
-                    .padding(.horizontal, 60) // Stringe per farla risaltare
-                    
-                    // 2. Titolo
-                    Text(movie.title)
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
-                    
-                    // 3. Anno (Quadratino)
-                    // Questa view è definita in MovieDetailView.swift
-                    InfoBlockView(title: "ANNO", value: movie.year, color: .blue)
-                        .padding(.horizontal, 40)
-                    
-                    // 4. Trama
-                    if let overview = randomOverview, !overview.isEmpty {
-                        ScrollView(showsIndicators: false) {
+                        // 1. Locandina Grande
+                        AsyncImage(url: randomPosterURL) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .cornerRadius(12)
+                                .shadow(radius: 10)
+                        } placeholder: {
+                            Rectangle()
+                                .foregroundColor(.gray.opacity(0.2))
+                                .aspectRatio(CGSize(width: 2, height: 3), contentMode: .fit)
+                                .cornerRadius(12)
+                                .overlay(Image(systemName: "film").foregroundColor(.gray.opacity(0.5)))
+                        }
+                        // --- MODIFICA: Altezza ridotta ---
+                        .frame(maxHeight: 300) // Era 350
+                        .padding(.horizontal, 60)
+                        
+                        // 2. Titolo
+                        Text(movie.title)
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                        
+                        // 3. Anno (Quadratino)
+                        InfoBlockView(title: "ANNO", value: movie.year, color: .blue)
+                            .padding(.horizontal, 40)
+                        
+                        // 4. Trama
+                        if let overview = randomOverview, !overview.isEmpty {
+                            // --- MODIFICA: Rimossa la ScrollView interna ---
                             Text(overview)
                                 .font(.body)
                                 .foregroundColor(.secondary)
                                 .padding(.horizontal, 20)
+                            // --- MODIFICA: Rimosso .frame(maxHeight: 100)
+                            
+                        } else if isSpinning == false {
+                            ProgressView()
+                                .padding()
                         }
-                        .frame(maxHeight: 100) // Limita l'altezza della trama
-                    } else if isSpinning == false {
-                        // Mostra un loader solo se NON stiamo girando
-                        // (cioè, stiamo caricando i dettagli)
-                        ProgressView()
-                            .padding()
                     }
-                }
-                .transition(.opacity)
-                .task(id: movie.id) { // <-- .task si ri-esegue quando movie.id cambia
-                    await loadRandomMovieDetails(movie: movie)
-                }
+                    .padding(.top) // Spazio in cima alla scroll
+                    .padding(.bottom) // Spazio in fondo alla scroll
+                    .transition(.opacity)
+                    .task(id: movie.id) {
+                        await loadRandomMovieDetails(movie: movie)
+                    }
+                } // --- Fine ScrollView
                 
             } else {
-                // Messaggio iniziale
+                // Messaggio iniziale (centrato con Spacer)
+                Spacer()
                 Image(systemName: "film.stack")
                     .font(.system(size: 60))
                     .foregroundColor(.secondary.opacity(0.5))
@@ -361,58 +371,68 @@ struct ContentView: View {
                 Text("Non sai che film guardare?")
                     .font(.title2)
                     .fontWeight(.bold)
-                Text("Scegli un film a caso da tutta la lista o solo dalla tua classifica.") // Testo modificato
+                Text("Scegli un film a caso da tutta la lista o solo dalla tua classifica.")
                     .font(.body)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
+                Spacer()
             }
-            
-            Spacer()
             
             // Bottone (visibile solo se non sta girando)
             if !isSpinning {
-                // --- BOTTONI RANDOM (MODIFICATI) ---
-                VStack(spacing: 15) {
+                // --- MODIFICATO: Stile bottoni ---
+                VStack(spacing: 10) { // Spazio ridotto
                     // --- BOTTONE 1: Random da TUTTI ---
                     Button {
-                        // Avvia l'animazione e la scelta
                         Task {
                             await runRandomPickerAnimation(fromRanked: false)
                         }
                     } label: {
                         Text(pickedMovie == nil ? "Scegli da Tutta la Lista!" : "Scegli un altro!")
-                            .font(.headline)
+                            .font(.callout) // Testo più piccolo
+                            .fontWeight(.medium)
                             .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.blue)
-                            .foregroundColor(.white)
+                            .padding(12) // Padding ridotto
+                            .background(.thinMaterial) // Effetto trasparente
+                            .foregroundColor(.primary) // Colore testo
                             .cornerRadius(10)
+                            .overlay( // Bordo opzionale
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(Color.blue, lineWidth: 1)
+                            )
                     }
-                    .disabled(allMovies.isEmpty) // Disabilita se la lista è vuota
+                    .disabled(allMovies.isEmpty)
                     
                     // --- BOTTONE 2: Random dalla CLASSIFICA ---
                     Button {
-                        // Avvia l'animazione e la scelta
                         Task {
                             await runRandomPickerAnimation(fromRanked: true)
                         }
                     } label: {
-                        HStack {
+                        HStack(spacing: 5) {
                             Image(systemName: "star.fill")
+                                .font(.caption) // Icona più piccola
                             Text("Scegli dalla Mia Classifica")
                         }
-                        .font(.headline)
+                        .font(.callout) // Testo più piccolo
+                        .fontWeight(.medium)
                         .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(rankedMovieIDs.isEmpty ? Color.gray : Color.yellow)
-                        .foregroundColor(rankedMovieIDs.isEmpty ? .white : .black)
+                        .padding(12) // Padding ridotto
+                        .background(rankedMovieIDs.isEmpty ? Color.gray.opacity(0.1) : Color.yellow.opacity(0.15)) // Sfondo trasparente
+                        .foregroundColor(rankedMovieIDs.isEmpty ? .secondary : .primary) // Colore testo
                         .cornerRadius(10)
+                        .overlay( // Bordo opzionale
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(rankedMovieIDs.isEmpty ? Color.gray : Color.yellow, lineWidth: 1)
+                        )
                     }
-                    .disabled(rankedMovieIDs.isEmpty) // Disabilita se la classifica è vuota
+                    .disabled(rankedMovieIDs.isEmpty)
                     
                 }
-                .padding()
+                .padding(.horizontal)
+                .padding(.bottom, 5) // Meno padding in basso
+                // --- FINE MODIFICA ---
             }
         }
         .transition(.opacity) // Transizione per la vista Random
