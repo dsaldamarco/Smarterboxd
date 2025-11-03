@@ -31,11 +31,9 @@ struct ContentView: View {
     // Memoria a lungo termine (salvata su disco)
     @State private var rankedMovieIDs: [String] = []
     
-    // --- NOVITÀ ---
     // Un Set per tenere traccia dei film cancellati.
     // Usiamo un Set perché è più veloce per controllare se un ID esiste.
     @State private var deletedMovieIDs: Set<String> = []
-    // --- FINE NOVITÀ ---
     
     @State private var currentView: ViewType = .all // Stato del SegmentedControl
     @State private var errorMessage: String? = nil // Eventuale errore
@@ -51,14 +49,18 @@ struct ContentView: View {
     @State private var randomPosterURL: URL? = nil
     @State private var randomOverview: String? = nil
     
+    // --- NOVITÀ: Testo della barra di ricerca ---
+    @State private var searchText: String = ""
+    // --- FINE NOVITÀ ---
+    
     
     // --- PROPRIETÀ CALCOLATA ---
     // Questa è la lista che la UI mostrerà
     var moviesToShow: [Movie] {
         
         // --- MODIFICATO ---
-        // 'allMovies' ora contiene solo film validi (non cancellati),
-        // quindi non dobbiamo filtrare di nuovo qui.
+        // 1. Definisci la lista di base (ordinata o classificata)
+        let baseList: [Movie]
         
         switch currentView {
         
@@ -66,20 +68,37 @@ struct ContentView: View {
             // --- VISTA "TUTTI" ---
             switch currentSort {
             case .byDateAdded:
-                return allMovies.reversed() // Più recenti aggiunti per primi
+                baseList = allMovies.reversed() // Più recenti aggiunti per primi
             case .byYear:
-                return allMovies.sorted { $0.year > $1.year } // Più recenti usciti per primi
+                baseList = allMovies.sorted { $0.year > $1.year } // Più recenti usciti per primi
             }
             
         case .ranked:
             // --- VISTA "CLASSIFICA" ---
-            return rankedMovieIDs.compactMap { id in
+            baseList = rankedMovieIDs.compactMap { id in
                 movieLookup[id] // Trova il film corrispondente a ogni ID
             }
             
         case .random:
+            baseList = [] // La vista random non usa questa lista
+        }
+        
+        // Se la vista è random, restituisci un array vuoto
+        if currentView == .random {
             return []
         }
+
+        // 2. Applica il filtro di ricerca (se presente)
+        if searchText.isEmpty {
+            return baseList // Nessuna ricerca, restituisci la lista di base
+        } else {
+            let lowercasedQuery = searchText.lowercased()
+            return baseList.filter { movie in
+                // Cerca solo nel titolo
+                movie.title.lowercased().contains(lowercasedQuery)
+            }
+        }
+        // --- FINE MODIFICA ---
     }
     
     // Colonne per la griglia
@@ -118,12 +137,11 @@ struct ContentView: View {
                     // --- VISTA DINAMICA ---
                     if currentView == .all || currentView == .ranked {
                         
-                        // --- LAYOUT DINAMICO (Lista o Griglia) ---
-                        if layoutMode == .list {
-                            listView
-                        } else {
-                            gridView
-                        }
+                        // --- MODIFICATO ---
+                        // Ora la vista lista/griglia è in una
+                        // proprietà calcolata separata
+                        listAndGridView
+                        // --- FINE MODIFICATO ---
                         
                     } else {
                         // --- VISTA RANDOM ---
@@ -146,12 +164,10 @@ struct ContentView: View {
             .onChange(of: rankedMovieIDs) { newIDs in
                 saveRankedIDs(newIDs)
             }
-            // --- NOVITÀ ---
             // Salva i film cancellati ogni volta che il Set cambia
             .onChange(of: deletedMovieIDs) { newIDs in
                 saveDeletedIDs(newIDs)
             }
-            // --- FINE NOVITÀ ---
             .toolbar {
                 // --- GRUPPO 1: Bottoni di Layout e Modifica
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
@@ -167,10 +183,9 @@ struct ContentView: View {
                         }
                     }
                     
-                    // Bottone Edit (solo per Classifica E in modalità Lista)
-                    if currentView == .ranked && layoutMode == .list {
-                        EditButton() // Abilita il riordino
-                    }
+                    // --- MODIFICATO ---
+                    // Bottone Edit rimosso (come richiesto)
+                    // --- FINE MODIFICA ---
                 }
                 
                 // --- GRUPPO 2: Menu Ordinamento
@@ -198,6 +213,24 @@ struct ContentView: View {
     
     // MARK: - Viste Secondarie (per pulizia)
     
+    // --- NOVITÀ: Proprietà calcolata per la vista Lista/Griglia ---
+    // Questo ci permette di applicare .searchable solo a questa vista
+    private var listAndGridView: some View {
+        VStack {
+            // --- LAYOUT DINAMICO (Lista o Griglia) ---
+            if layoutMode == .list {
+                listView
+            } else {
+                gridView
+            }
+        }
+        // --- MODIFICATO: La barra di ricerca è applicata QUI ---
+        // In questo modo, quando questa vista scompare,
+        // scompare anche la barra di ricerca.
+        .searchable(text: $searchText, prompt: "Cerca un film...")
+        // --- FINE MODIFICA ---
+    }
+    
     // La vista per la modalità Lista
     private var listView: some View {
         List {
@@ -215,10 +248,14 @@ struct ContentView: View {
                     )
                 }
             }
-            .onMove(perform: movePriority)
-            // --- NOVITÀ: Gesto di cancellazione ---
+            // --- MODIFICATO ---
+            // Funzione di riordino rimossa perché dipendeva
+            // dal pulsante "Modifica"
+            // .onMove(perform: movePriority)
+            // --- FINE MODIFICA ---
+            
+            // Gesto di cancellazione (funziona ancora)
             .onDelete(perform: deleteMovie)
-            // --- FINE NOVITÀ ---
         }
         .listStyle(.plain) // Stile pulito
     }
@@ -253,10 +290,8 @@ struct ContentView: View {
             Spacer()
             
             if isSpinning {
-                // --- MODIFICATO ---
                 // Sostituito il blocco ProgressView con la nuova SpinnerView
                 SpinnerView()
-                // --- FINE MODIFICA ---
                 
             // --- LAYOUT MODIFICATO DOPO LA SCELTA ---
             } else if let movie = pickedMovie {
@@ -420,10 +455,15 @@ struct ContentView: View {
         }
     }
     
+    // --- MODIFICATO ---
+    // Funzione di riordino rimossa
+    /*
     // Chiamata quando l'utente trascina un film nella classifica
     func movePriority(from source: IndexSet, to destination: Int) {
         rankedMovieIDs.move(fromOffsets: source, toOffset: destination)
     }
+    */
+    // --- FINE MODIFICA ---
     
     // --- NOVITÀ: Funzione per cancellare un film ---
     func deleteMovie(at offsets: IndexSet) {
@@ -446,16 +486,56 @@ struct ContentView: View {
     // Gestisce l'animazione e la scelta del film random
     func runRandomPickerAnimation(fromRanked: Bool) async {
         
-        // Controlla se la lista appropriata è vuota
-        if fromRanked && rankedMovieIDs.isEmpty {
-            return // Non fare nulla se si chiede dalla classifica vuota
+        // --- MODIFICATO: CORREZIONE DEL BUG ---
+        // La funzione ora costruisce la sua lista sorgente
+        // indipendentemente da 'moviesToShow' (che è vuoto in modalità Random)
+        
+        let sourceList: [Movie]
+        let lowercasedQuery = searchText.lowercased()
+
+        if fromRanked {
+            // 1. Prendi i film della classifica
+            let baseRankedList = rankedMovieIDs.compactMap { movieLookup[$0] }
+            
+            // 2. Filtra in base alla ricerca (se c'è)
+            if searchText.isEmpty {
+                sourceList = baseRankedList
+            } else {
+                sourceList = baseRankedList.filter { $0.title.lowercased().contains(lowercasedQuery) }
+            }
+            
+            // Imposta il testo
+            self.randomSourceText = "dalla tua classifica"
+            if !searchText.isEmpty {
+                self.randomSourceText += " (filtrata)"
+            }
+            
+        } else {
+            // 1. Prendi tutti i film
+            let baseAllList = allMovies
+            
+            // 2. Filtra in base alla ricerca (se c'è)
+            if searchText.isEmpty {
+                sourceList = baseAllList
+            } else {
+                sourceList = baseAllList.filter { $0.title.lowercased().contains(lowercasedQuery) }
+            }
+            
+            // Imposta il testo
+            self.randomSourceText = "dalla tua lista"
+            if !searchText.isEmpty {
+                self.randomSourceText += " (filtrata)"
+            }
         }
-        if !fromRanked && allMovies.isEmpty {
-            return // Non fare nulla se la lista intera è vuota
+
+        // Controlla se la lista di origine è vuota
+        if sourceList.isEmpty {
+            return // Non fare nulla
         }
+        // --- FINE MODIFICA ---
         
         isSpinning = true
-        // --- MODIFICA ---
+        // --- MODIFKA ---
         // Resettiamo TUTTO qui, per un'animazione pulita
         await MainActor.run {
             withAnimation(.easeInOut) {
@@ -470,17 +550,8 @@ struct ContentView: View {
             try await Task.sleep(nanoseconds: 1_000_000_000)
         } catch {}
         
-        // L'impostazione di pickedMovie qui
-        // farà apparire il nuovo blocco in randomView
-        if fromRanked {
-            if let randomID = rankedMovieIDs.randomElement() {
-                self.pickedMovie = movieLookup[randomID]
-                self.randomSourceText = "dalla tua classifica"
-            }
-        } else {
-            self.pickedMovie = allMovies.randomElement()
-            self.randomSourceText = "dalla tua lista"
-        }
+        // Scegli un film dalla lista di origine
+        self.pickedMovie = sourceList.randomElement()
         
         isSpinning = false
     }
