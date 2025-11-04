@@ -115,14 +115,16 @@ struct ContentView: View {
             VStack(spacing: 0) {
                 
                 // --- NOVITÀ: Titolo personalizzato ---
-                Text("Betterboxd")
-                    // Titolo
-                
+                Text("Watchlist")
+                    // ATTENZIONE: Assicurati che "SharpGrotesk-SemiBold20"
+                    // sia il NOME POSTSCRIPT corretto (da Libro Font),
+                    // non necessariamente il nome del file .otf!
                     .font(.custom("SharpGrotesk-SemiBold20", size: 34))
                     .fontWeight(.bold) // Fallback
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal)
                     .padding(.bottom, 5) // Spazio prima del contenuto
+                // --- FINE NOVITÀ ---
                 
                 // Se c'è un errore, mostralo
                 if let errorMessage = errorMessage {
@@ -142,7 +144,7 @@ struct ContentView: View {
                     // --- SEGMENTED CONTROL ---
                     Picker("Visualizza", selection: $currentView.animation()) {
                         Text("Tutti").tag(ViewType.all)
-                        Text("Filmello").tag(ViewType.ranked)
+                        Text("Mia Classifica").tag(ViewType.ranked)
                         Text("Random").tag(ViewType.random)
                     }
                     .pickerStyle(.segmented)
@@ -251,7 +253,9 @@ struct ContentView: View {
     // La vista per la modalità Lista
     private var listView: some View {
         List {
-            ForEach(moviesToShow) { movie in
+            // --- INIZIO CORREZIONE BUG ---
+            // 1. Definiamo il contenuto del ForEach
+            let content = ForEach(moviesToShow) { movie in
                 NavigationLink(destination: MovieDetailView(movie: movie)) {
                     MovieRowView(
                         movie: movie,
@@ -265,14 +269,18 @@ struct ContentView: View {
                     )
                 }
             }
-            // --- MODIFICATO ---
-            // Funzione di riordino rimossa perché dipendeva
-            // dal pulsante "Modifica"
-            // .onMove(perform: movePriority)
-            // --- FINE MODIFICA ---
             
-            // Gesto di cancellazione (funziona ancora)
-            .onDelete(perform: deleteMovie)
+            // 2. Applichiamo i modificatori condizionalmente
+            // Questo risolve il bug "ambiguous type"
+            if currentView == .ranked && searchText.isEmpty {
+                content
+                    .onMove(perform: movePriority)
+                    .onDelete(perform: deleteMovie)
+            } else {
+                content
+                    .onDelete(perform: deleteMovie)
+            }
+            // --- FINE CORREZIONE BUG ---
         }
         .listStyle(.plain) // Stile pulito
     }
@@ -502,13 +510,13 @@ struct ContentView: View {
     }
     
     // --- MODIFICATO ---
-    // Funzione di riordino rimossa
-    /*
+    // Funzione di riordino ripristinata
     // Chiamata quando l'utente trascina un film nella classifica
     func movePriority(from source: IndexSet, to destination: Int) {
+        // Applica lo spostamento direttamente all'array
+        // sorgente della classifica.
         rankedMovieIDs.move(fromOffsets: source, toOffset: destination)
     }
-    */
     // --- FINE MODIFICA ---
     
     // --- NOVITÀ: Funzione per cancellare un film ---
