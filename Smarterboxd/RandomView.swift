@@ -7,6 +7,7 @@ struct RandomView: View {
         case all = "Tutta la watchlist"
         case ranked = "Classifica"
         var id: String { rawValue }
+        var systemImage: String { self == .all ? "film.stack" : "trophy" }
     }
 
     @State private var pool: Pool = .all
@@ -24,17 +25,33 @@ struct RandomView: View {
                         .transition(.opacity)
                 }
 
-                ScrollView {
-                    content
-                        .frame(maxWidth: .infinity)
-                        .padding(.horizontal, 24)
-                        .padding(.vertical)
+                GeometryReader { proxy in
+                    ScrollView {
+                        content
+                            .frame(maxWidth: .infinity)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical)
+                            // Centra il contenuto quando entra nello schermo, altrimenti scorre.
+                            .frame(minHeight: proxy.size.height)
+                    }
+                    .scrollBounceBehavior(.basedOnSize)
                 }
-                .scrollBounceBehavior(.basedOnSize)
-                .defaultScrollAnchor(.center)
             }
             .safeAreaInset(edge: .bottom) { controls }
             .navigationTitle("Random")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Picker("Scegli da", selection: $pool) {
+                            ForEach(Pool.allCases) { Label($0.rawValue, systemImage: $0.systemImage).tag($0) }
+                        }
+                    } label: {
+                        Label(pool.rawValue, systemImage: pool.systemImage)
+                            .labelStyle(.titleAndIcon)
+                            .font(.subheadline.weight(.medium))
+                    }
+                }
+            }
             .movieNavigation()
             .sensoryFeedback(.selection, trigger: shuffleTitle)
             .sensoryFeedback(.success, trigger: picked)
@@ -58,7 +75,6 @@ struct RandomView: View {
                     .transition(.asymmetric(insertion: .move(edge: .bottom).combined(with: .opacity),
                                             removal: .move(edge: .top).combined(with: .opacity)))
             }
-            .frame(minHeight: 420)
         } else if let picked {
             PickedMovieView(movie: picked)
                 .id(picked.id)
@@ -75,17 +91,11 @@ struct RandomView: View {
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
-            .frame(minHeight: 420)
         }
     }
 
     private var controls: some View {
-        VStack(spacing: 12) {
-            Picker("Scegli da", selection: $pool) {
-                ForEach(Pool.allCases) { Text($0.rawValue).tag($0) }
-            }
-            .pickerStyle(.segmented)
-
+        VStack(spacing: 8) {
             Button(action: shuffle) {
                 Label(picked == nil ? "Scegli un film" : "Scegli un altro", systemImage: "dice.fill")
                     .font(.body.weight(.semibold))
@@ -140,13 +150,12 @@ private struct PickedMovieView: View {
 
     var body: some View {
         MovieDetailsLoader(movie: movie) { details, loaded in
+            // Tutta la scheda apre il dettaglio del film.
+            NavigationLink(value: movie) {
             VStack(spacing: 18) {
-                NavigationLink(value: movie) {
-                    PosterImage(url: details?.posterURL(.large), title: movie.title, isLoaded: loaded, cornerRadius: 16)
-                        .frame(maxWidth: 230)
-                        .shadow(color: .black.opacity(0.35), radius: 24, y: 12)
-                }
-                .buttonStyle(.plain)
+                PosterImage(url: details?.posterURL(.large), title: movie.title, isLoaded: loaded, cornerRadius: 16)
+                    .frame(maxWidth: 210)
+                    .shadow(color: .black.opacity(0.35), radius: 24, y: 12)
 
                 VStack(spacing: 6) {
                     Text(movie.title)
@@ -164,16 +173,13 @@ private struct PickedMovieView: View {
                         .font(.callout)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
-                        .lineLimit(4)
+                        .lineLimit(3)
                 }
-
-                NavigationLink(value: movie) {
-                    Text("Dettagli")
-                        .font(.subheadline.weight(.semibold))
-                        .padding(.horizontal, 8)
-                }
-                .buttonStyle(.glass)
             }
+            .foregroundStyle(.primary)
+            .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
         }
     }
 }

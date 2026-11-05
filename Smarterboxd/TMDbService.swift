@@ -49,7 +49,7 @@ actor TMDbService {
     private var inFlight: [String: Task<MovieDetails?, Never>] = [:]
     private var saveTask: Task<Void, Never>?
 
-    private let cacheURL = URL.cachesDirectory.appending(path: "tmdb-cache.json")
+    private let cacheURL = URL.cachesDirectory.appending(path: "tmdb-cache-v2.json")
 
     init() {
         if let data = try? Data(contentsOf: cacheURL),
@@ -87,10 +87,11 @@ actor TMDbService {
         if hit == nil, !year.isEmpty { hit = await search(title: title, year: nil) }
         guard let hit else { return nil }
 
-        // 2. Dettagli + crediti in italiano, con ripiego sull'inglese
-        let italian = await movieDetails(id: hit.id, language: "it-IT")
-        var english: DetailResponse?
-        if (italian?.overview ?? "").isEmpty { english = await movieDetails(id: hit.id, language: "en-US") }
+        // 2. Trama e generi in italiano; crediti in inglese, perché in italiano
+        //    TMDb restituisce i nomi nella grafia originale (es. "楊德昌" invece di "Edward Yang").
+        async let italianTask = movieDetails(id: hit.id, language: "it-IT", credits: false)
+        async let englishTask = movieDetails(id: hit.id, language: "en-US", credits: true)
+        let (italian, english) = await (italianTask, englishTask)
         let primary = italian ?? english
 
         func nonEmpty(_ s: String?) -> String? { (s?.isEmpty ?? true) ? nil : s }
@@ -101,7 +102,7 @@ actor TMDbService {
             backdropPath: primary?.backdrop_path ?? hit.backdrop_path,
             overview: nonEmpty(italian?.overview) ?? nonEmpty(english?.overview),
             tagline: nonEmpty(italian?.tagline) ?? nonEmpty(english?.tagline),
-            director: primary?.credits?.crew.first { $0.job == "Director" }?.name,
+            director: english?.credits?.crew.first { $0.job == "Director" }?.name,
             runtime: primary?.runtime,
             genres: primary?.genres?.map(\.name) ?? [],
             rating: primary?.vote_average.flatMap { $0 > 0 ? $0 : nil }
@@ -115,9 +116,10 @@ actor TMDbService {
         return response?.results.first
     }
 
-    private nonisolated func movieDetails(id: Int, language: String) async -> DetailResponse? {
-        await get("movie/\(id)", [URLQueryItem(name: "language", value: language),
-                                  URLQueryItem(name: "append_to_response", value: "credits")])
+    private nonisolated func movieDetails(id: Int, language: String, credits: Bool) async -> DetailResponse? {
+        var items = [URLQueryItem(name: "language", value: language)]
+        if credits { items.append(URLQueryItem(name: "append_to_response", value: "credits")) }
+        return await get("movie/\(id)", items)
     }
 
     private nonisolated func get<T: Decodable>(_ path: String, _ items: [URLQueryItem]) async -> T? {

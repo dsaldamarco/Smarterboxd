@@ -25,8 +25,13 @@ nonisolated struct Movie: Identifiable, Hashable, Codable, Sendable {
         guard let dateAdded,
               let date = try? Date(dateAdded, strategy: .iso8601.year().month().day())
         else { return nil }
-        return date.formatted(date: .long, time: .omitted)
+        return date.formatted(.dateTime.day().month(.wide).year().locale(.italian))
     }
+}
+
+nonisolated extension Locale {
+    /// L'interfaccia è in italiano: date e orari seguono la stessa lingua.
+    static let italian = Locale(identifier: "it_IT")
 }
 
 enum SortOrder: String, CaseIterable, Identifiable {

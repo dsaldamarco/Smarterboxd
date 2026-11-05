@@ -40,7 +40,7 @@ struct SettingsView: View {
                     }
                 } footer: {
                     if let lastSync = store.lastSync {
-                        Text("Aggiornata \(lastSync.formatted(.relative(presentation: .named))).")
+                        Text("Aggiornata \(lastSync.formatted(Date.RelativeFormatStyle(presentation: .named, locale: .italian))).")
                     }
                 }
 
