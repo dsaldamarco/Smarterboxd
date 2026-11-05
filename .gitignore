@@ -1,0 +1,10 @@
+# Chiavi API locali
+Secrets.xcconfig
+
+# Xcode
+xcuserdata/
+DerivedData/
+build/
+
+# macOS
+.DS_Store

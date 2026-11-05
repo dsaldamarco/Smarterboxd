@@ -1,89 +1,86 @@
 import Foundation
 
-// MARK: - 2. IL PARSER CSV
+/// Legge il file `watchlist.csv` dell'esportazione dati di Letterboxd
+/// (Impostazioni › Dati › Esporta i tuoi dati).
+/// Formato: Date,Name,Year,Letterboxd URI
+nonisolated enum CSVParser {
 
-enum CSVParser {
-    
-    // Un errore personalizzato
-    enum ParserError: Error {
-        case fileNotFound(String)
-        case parsingFailed(String)
-    }
-    
-    // Funzione principale per caricare e analizzare il file
-    static func loadMovies(from filename: String) throws -> [Movie] {
-        
-        // 1. Trova il file nel progetto
-        guard let fileURL = Bundle.main.url(forResource: filename, withExtension: "csv") else {
-            throw ParserError.fileNotFound("Impossibile trovare il file \(filename).csv nel progetto. Assicurati di averlo aggiunto al target.")
-        }
-        
-        var movies: [Movie] = []
-        let fileContent: String
-        
-        // 2. Leggi il contenuto del file
-        do {
-            fileContent = try String(contentsOf: fileURL, encoding: .utf8)
-        } catch {
-            throw ParserError.parsingFailed("Impossibile leggere il file: \(error.localizedDescription)")
-        }
-        
-        // 3. Dividi il file in righe
-        let lines = fileContent.components(separatedBy: .newlines)
-        
-        // 4. Salta la prima riga (intestazioni) e analizza le altre
-        for line in lines.dropFirst() {
-            if line.isEmpty { continue } // Salta righe vuote
-            
-            // 5. Analizza una singola riga
-            // Formato CSV: Date,Name,Year,Letterboxd URI
-            if let movie = parse(line: line) {
-                movies.append(movie)
+    enum ParserError: LocalizedError {
+        case unreadable
+        case wrongFormat
+
+        var errorDescription: String? {
+            switch self {
+            case .unreadable: "Impossibile leggere il file."
+            case .wrongFormat: "Il file non sembra un watchlist.csv di Letterboxd."
             }
         }
-        
+    }
+
+    static func loadMovies(from url: URL) throws -> [Movie] {
+        let accessing = url.startAccessingSecurityScopedResource()
+        defer { if accessing { url.stopAccessingSecurityScopedResource() } }
+
+        guard let content = try? String(contentsOf: url, encoding: .utf8) else { throw ParserError.unreadable }
+        return try parse(content)
+    }
+
+    static func parse(_ content: String) throws -> [Movie] {
+        let rows = parseRows(content)
+        guard let header = rows.first?.map({ $0.lowercased() }),
+              let nameIndex = header.firstIndex(of: "name"),
+              let uriIndex = header.firstIndex(of: "letterboxd uri")
+        else { throw ParserError.wrongFormat }
+
+        let dateIndex = header.firstIndex(of: "date")
+        let yearIndex = header.firstIndex(of: "year")
+
+        // Il CSV è in ordine cronologico: l'ultima riga è il film aggiunto più di recente.
+        let movies = rows.dropFirst().enumerated().compactMap { index, row -> Movie? in
+            guard row.count > max(nameIndex, uriIndex), !row[uriIndex].isEmpty else { return nil }
+            func value(_ i: Int?) -> String? { i.flatMap { $0 < row.count ? row[$0] : nil } }
+            return Movie(id: row[uriIndex], title: row[nameIndex], year: value(yearIndex) ?? "",
+                         slug: nil, dateAdded: value(dateIndex), addedIndex: index + 1)
+        }
+        guard !movies.isEmpty else { throw ParserError.wrongFormat }
         return movies
     }
-    
-    // Funzione helper che analizza una riga
-    // usando un'Espressione Regolare (RegEx) per gestire le virgole
-    private static func parse(line: String) -> Movie? {
-        do {
-            // Questa RegEx trova:
-            // 1. Testo tra virgolette (es. "I, Tonya")
-            // 2. O testo non separato da virgole (es. 2017)
-            let regex = try NSRegularExpression(pattern: "\"(.*?)\"|([^,]+)")
-            let results = regex.matches(in: line, range: NSRange(line.startIndex..., in: line))
-            
-            let columns = results.map {
-                let range = Range($0.range, in: line)!
-                // Pulisce le virgolette e gli spazi bianchi
-                return String(line[range])
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                    .trimmingCharacters(in: CharacterSet(charactersIn: "\""))
-            }
 
-            // Il CSV di Letterboxd ha questo formato:
-            // 0: Date
-            // 1: Name (Titolo)
-            // 2: Year (Anno)
-            // 3: Letterboxd URI (ID)
-            
-            if columns.count >= 4 {
-                // Ora leggiamo tutte e 4 le colonne
-                let date = columns[0]
-                let title = columns[1]
-                let year = columns[2]
-                let id = columns[3]
-                
-                // Crea e restituisce il film (con posterURL nullo per ora)
-                return Movie(id: id, title: title, year: year, dateAdded: date, posterURL: nil)
+    /// Parser CSV (RFC 4180): gestisce virgole e virgolette dentro i campi.
+    private static func parseRows(_ content: String) -> [[String]] {
+        var rows: [[String]] = []
+        var row: [String] = []
+        var field = ""
+        var inQuotes = false
+        var iterator = content.makeIterator()
+
+        func handle(_ char: Character) {
+            switch char {
+            case "\"": inQuotes = true
+            case ",": row.append(field); field = ""
+            case "\n", "\r\n", "\r":
+                row.append(field); field = ""
+                if !(row.count == 1 && row[0].isEmpty) { rows.append(row) }
+                row = []
+            default: field.append(char)
             }
-            
-        } catch {
-            print("Errore RegEx: \(error)")
         }
-        
-        return nil // Parsing della riga fallito
+
+
+        while let char = iterator.next() {
+            if inQuotes {
+                if char == "\"" {
+                    if let next = iterator.next() {
+                        if next == "\"" { field.append("\"") }
+                        else {
+                            inQuotes = false
+                            handle(next)
+                        }
+                    } else { inQuotes = false }
+                } else { field.append(char) }
+            } else { handle(char) }
+        }
+        if !field.isEmpty || !row.isEmpty { row.append(field); rows.append(row) }
+        return rows
     }
 }

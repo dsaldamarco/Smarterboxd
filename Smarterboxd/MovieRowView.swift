@@ -1,81 +1,59 @@
 import SwiftUI
 
-// MARK: - 5. VISTA RIGA FILM (OTTIMIZZAZIONE)
-
+/// Riga per le viste a lista.
 struct MovieRowView: View {
+    @Environment(WatchlistStore.self) private var store
     let movie: Movie
-    let isRanked: Bool
-    let rank: Int? // Numero opzionale per la classifica
-    let onTogglePriority: () -> Void // Azione per il tap sulla stella
-    
-    // Stato locale per contenere l'URL della locandina trovato
-    @State private var posterURL: URL? = nil
-    
+    var rank: Int? = nil
+    var showsStar = true
+
     var body: some View {
-        HStack(spacing: 12) {
-            
-            // --- LOCANDINA (NOVITÀ) ---
-            AsyncImage(url: posterURL) { image in // Usa lo @State locale
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-            } placeholder: {
-                // Placeholder grigio
-                Rectangle()
-                    .foregroundColor(.gray.opacity(0.2))
-                    .overlay(Image(systemName: "film"))
-                    .foregroundColor(.gray.opacity(0.5))
+        MovieDetailsLoader(movie: movie) { details, loaded in
+            HStack(spacing: 14) {
+                if let rank {
+                    Text("\(rank)")
+                        .font(.title3.weight(.semibold).monospacedDigit())
+                        .foregroundStyle(rank <= 3 ? AnyShapeStyle(.orange) : AnyShapeStyle(.tertiary))
+                        .frame(minWidth: 28)
+                }
+
+                PosterImage(url: details?.posterURL(), title: "", isLoaded: loaded, cornerRadius: 6)
+                    .frame(width: 48)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(movie.title)
+                        .font(.body.weight(.semibold))
+                        .lineLimit(2)
+                    Text(subtitle(details))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+
+                Spacer(minLength: 0)
+
+                if showsStar {
+                    let ranked = store.isRanked(movie)
+                    Button {
+                        withAnimation(.snappy) { store.toggleRanked(movie) }
+                    } label: {
+                        Image(systemName: ranked ? "star.fill" : "star")
+                            .font(.body.weight(.medium))
+                            .foregroundStyle(ranked ? AnyShapeStyle(.orange) : AnyShapeStyle(.tertiary))
+                            .contentTransition(.symbolEffect(.replace))
+                            .frame(width: 36, height: 36)
+                            .contentShape(.rect)
+                    }
+                    .buttonStyle(.plain)
+                    .sensoryFeedback(.selection, trigger: ranked)
+                    .accessibilityLabel(ranked ? "Rimuovi dalla classifica" : "Aggiungi alla classifica")
+                }
             }
-            .frame(width: 40, height: 60) // Dimensioni standard locandina
-            .cornerRadius(4)
-            
-            // Mostra il numero classifica (es. "1", "2", ...)
-            if let rank = rank {
-                Text("\(rank + 1)")
-                    .font(.caption)
-                    .fontWeight(.bold)
-                    .foregroundColor(.secondary)
-                    .frame(width: 20)
-            }
-            
-            // Titolo e dettagli
-            VStack(alignment: .leading) {
-                Text(movie.title)
-                    .font(.headline)
-                Text("Anno: \(movie.year) | Aggiunto: \(movie.dateAdded)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            
-            Spacer() // Spinge la stella a destra
-            
-            // --- MODIFICATO ---
-            // Sostituito onTapGesture con Button per evitare
-            // che il tap si propaghi alla NavigationLink
-            Button {
-                onTogglePriority() // Esegue l'azione
-            } label: {
-                Image(systemName: isRanked ? "star.fill" : "star")
-                    .foregroundColor(isRanked ? .yellow : .gray)
-            }
-            .buttonStyle(.plain) // IMPORTANTE: impedisce al bottone di attivare la NavLink
-        }
-        .padding(.vertical, 4) // Aggiunge un po' di spazio
-        .task { // --- NOVITÀ: Caricamento "Lazy" ---
-            // Si avvia solo quando la riga appare sullo schermo
-            if posterURL == nil { // Carica solo se non l'ha già fatto
-                await loadPoster()
-            }
+            .padding(.vertical, 4)
         }
     }
-    
-    // Funzione per chiamare il PosterService
-    private func loadPoster() async {
-        // --- MODIFICATO: Chiama il nuovo servizio
-        let details = await PosterService.shared.fetchMovieExtras(
-            title: movie.title,
-            year: movie.year
-        )
-        self.posterURL = details?.smallPosterURL
+
+    private func subtitle(_ details: MovieDetails?) -> String {
+        [movie.year, details?.director].compactMap { $0?.isEmpty == false ? $0 : nil }.joined(separator: " · ")
     }
 }

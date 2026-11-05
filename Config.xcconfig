@@ -1,0 +1,7 @@
+// Impostazioni di build condivise (questo file va su GitHub).
+// La chiave TMDb vera sta in Secrets.xcconfig, che è escluso da git.
+// Per configurarla: copia Secrets.example.xcconfig in Secrets.xcconfig e incolla la tua chiave.
+
+TMDB_API_KEY =
+
+#include? "Secrets.xcconfig"

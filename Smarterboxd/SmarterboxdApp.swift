@@ -1,12 +1,19 @@
 import SwiftUI
 
-// MARK: - 8. IL PUNTO D'INGRESSO DELL'APP
-
 @main
-struct LetterboxdWatchlistApp: App {
+struct SmarterboxdApp: App {
+    @State private var store = WatchlistStore()
+
+    init() {
+        // Cache più ampia per le locandine scaricate da AsyncImage.
+        URLCache.shared = URLCache(memoryCapacity: 64 * 1024 * 1024, diskCapacity: 512 * 1024 * 1024)
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(store)
+                .tint(.orange)
         }
     }
 }

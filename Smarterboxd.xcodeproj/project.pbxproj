@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXFileReference section */
+		C0F1C0F12EF0000000000001 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		54D674742EB8F30C003721D2 /* Smarterboxd.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Smarterboxd.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -45,6 +46,7 @@
 		54D6746B2EB8F30C003721D2 = {
 			isa = PBXGroup;
 			children = (
+				C0F1C0F12EF0000000000001 /* Config.xcconfig */,
 				54D674762EB8F30C003721D2 /* Smarterboxd */,
 				54D674752EB8F30C003721D2 /* Products */,
 			);
@@ -140,6 +142,7 @@
 /* Begin XCBuildConfiguration section */
 		54D6747D2EB8F30E003721D2 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C0F1C0F12EF0000000000001 /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -204,6 +207,7 @@
 		};
 		54D6747E2EB8F30E003721D2 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C0F1C0F12EF0000000000001 /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
