@@ -13,11 +13,11 @@ nonisolated enum LetterboxdError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .invalidUsername: "Inserisci un nome utente valido."
-        case .userNotFound: "Nessun utente Letterboxd con questo nome."
-        case .emptyOrPrivate: "La watchlist è vuota o non è pubblica."
-        case .blocked: "Letterboxd ha temporaneamente bloccato la richiesta. Riprova tra poco oppure importa il CSV."
-        case .badResponse(let code): "Risposta inattesa da Letterboxd (codice \(code))."
+        case .invalidUsername: String(localized: "Enter a valid username.")
+        case .userNotFound: String(localized: "No Letterboxd user with this name.")
+        case .emptyOrPrivate: String(localized: "The watchlist is empty or not public.")
+        case .blocked: String(localized: "Letterboxd temporarily blocked the request. Try again shortly or import the CSV.")
+        case .badResponse(let code): String(localized: "Unexpected response from Letterboxd (code \(code)).")
         }
     }
 }

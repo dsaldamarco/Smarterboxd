@@ -75,7 +75,7 @@ struct RankBadge: View {
     let rank: Int
 
     var body: some View {
-        Text("\(rank)")
+        Text(verbatim: "\(rank)")
             .font(.caption.weight(.bold).monospacedDigit())
             .foregroundStyle(.white)
             .frame(minWidth: 24, minHeight: 24)
@@ -90,18 +90,47 @@ struct MovieActions: View {
     let movie: Movie
 
     var body: some View {
-        let ranked = store.isRanked(movie)
-        Button(ranked ? "Rimuovi dalla classifica" : "Aggiungi alla classifica",
-               systemImage: ranked ? "star.slash" : "star") {
-            withAnimation(.snappy) { store.toggleRanked(movie) }
+        // Le classifiche contengono solo film della propria watchlist
+        // (in "Insieme" compaiono anche film presenti solo in quella degli amici).
+        if store.isInWatchlist(movie) {
+            if store.lists.count == 1 {
+                let ranked = store.isRanked(movie)
+                Button(ranked ? LocalizedStringKey("Remove from ranking") : LocalizedStringKey("Add to ranking"),
+                       systemImage: ranked ? "star.slash" : "star") {
+                    withAnimation(.snappy) { store.toggleRanked(movie) }
+                }
+            } else {
+                ListMembershipMenu(movie: movie)
+            }
         }
         if let url = movie.letterboxdURL {
-            Link(destination: url) { Label("Apri su Letterboxd", systemImage: "arrow.up.right") }
-            ShareLink(item: url) { Label("Condividi", systemImage: "square.and.arrow.up") }
+            Link(destination: url) { Label("Open on Letterboxd", systemImage: "arrow.up.right") }
+            ShareLink(item: url) { Label("Share", systemImage: "square.and.arrow.up") }
         }
-        Divider()
-        Button("Nascondi", systemImage: "eye.slash", role: .destructive) {
-            withAnimation(.snappy) { store.hide(movie) }
+        if store.isInWatchlist(movie) {
+            Divider()
+            Button("Hide", systemImage: "eye.slash", role: .destructive) {
+                withAnimation(.snappy) { store.hide(movie) }
+            }
+        }
+    }
+}
+
+/// Sottomenu con una spunta per ogni classifica.
+struct ListMembershipMenu: View {
+    @Environment(WatchlistStore.self) private var store
+    let movie: Movie
+
+    var body: some View {
+        Menu {
+            ForEach(store.lists) { list in
+                Toggle(list.title, isOn: Binding(
+                    get: { store.list(list.id, contains: movie) },
+                    set: { _ in withAnimation(.snappy) { store.toggle(movie, in: list.id) } }
+                ))
+            }
+        } label: {
+            Label("Add to list", systemImage: "square.stack")
         }
     }
 }

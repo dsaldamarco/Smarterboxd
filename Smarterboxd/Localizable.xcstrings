@@ -1,0 +1,1140 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "#%lld in ranking": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "#%lld in classifica"
+          }
+        }
+      }
+    },
+    "#%lld in “%@”": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "#%lld in «%@»"
+          }
+        }
+      }
+    },
+    "%lld films": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld film"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld films"
+                }
+              }
+            }
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld film"
+          }
+        }
+      }
+    },
+    "%lld films · Drag to reorder": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld film · Drag to reorder"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld films · Drag to reorder"
+                }
+              }
+            }
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld film · Trascina per riordinare"
+          }
+        }
+      }
+    },
+    "%lld films · Updating…": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld film · Updating…"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld films · Updating…"
+                }
+              }
+            }
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld film · Aggiornamento…"
+          }
+        }
+      }
+    },
+    "@%@ is already in the list.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "@%@ è già nella lista."
+          }
+        }
+      }
+    },
+    "Account": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account"
+          }
+        }
+      }
+    },
+    "Account and settings": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Account e impostazioni"
+          }
+        }
+      }
+    },
+    "Add": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi"
+          }
+        }
+      }
+    },
+    "Add to list": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi a una lista"
+          }
+        }
+      }
+    },
+    "Add to ranking": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi alla classifica"
+          }
+        }
+      }
+    },
+    "Add to “%@”": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi a «%@»"
+          }
+        }
+      }
+    },
+    "Added on %@": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiunto il %@"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annulla"
+          }
+        }
+      }
+    },
+    "Change account": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambia account"
+          }
+        }
+      }
+    },
+    "Clear list": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Svuota lista"
+          }
+        }
+      }
+    },
+    "Clear “%@”?": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Svuotare «%@»?"
+          }
+        }
+      }
+    },
+    "Couldn’t read the file.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile leggere il file."
+          }
+        }
+      }
+    },
+    "Create": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crea"
+          }
+        }
+      }
+    },
+    "Delete list": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elimina lista"
+          }
+        }
+      }
+    },
+    "Delete “%@”?": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminare «%@»?"
+          }
+        }
+      }
+    },
+    "Details not available.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dettagli non disponibili."
+          }
+        }
+      }
+    },
+    "Empty watchlist": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Watchlist vuota"
+          }
+        }
+      }
+    },
+    "Enter a valid username.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inserisci un nome utente valido."
+          }
+        }
+      }
+    },
+    "Films": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Film"
+          }
+        }
+      }
+    },
+    "Find films in common": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trova film in comune"
+          }
+        }
+      }
+    },
+    "First added": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiunti per primi"
+          }
+        }
+      }
+    },
+    "For example “With friends” or “Date night”.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per esempio «Con gli amici» o «Serata di coppia»."
+          }
+        }
+      }
+    },
+    "Friend’s Letterboxd username": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nome utente Letterboxd dell’amico"
+          }
+        }
+      }
+    },
+    "From %lld films in common": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "From %lld film in common"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "From %lld films in common"
+                }
+              }
+            }
+          }
+        },
+        "it": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Tra %lld film in comune"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Tra %lld film in comune"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "From CSV file": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Da file CSV"
+          }
+        }
+      }
+    },
+    "From Letterboxd › Settings › Data › Export your data.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Da Letterboxd › Impostazioni › Dati › Esporta i tuoi dati."
+          }
+        }
+      }
+    },
+    "From your whole watchlist": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Da tutta la watchlist"
+          }
+        }
+      }
+    },
+    "From “%@”": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Da «%@»"
+          }
+        }
+      }
+    },
+    "Grid": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Griglia"
+          }
+        }
+      }
+    },
+    "Hide": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nascondi"
+          }
+        }
+      }
+    },
+    "Import watchlist.csv": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importa watchlist.csv"
+          }
+        }
+      }
+    },
+    "Imported watchlist": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Watchlist importata"
+          }
+        }
+      }
+    },
+    "In %lld of %lld watchlists": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In %lld watchlist su %lld"
+          }
+        }
+      }
+    },
+    "In both watchlists": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In entrambe le watchlist"
+          }
+        }
+      }
+    },
+    "In everyone’s watchlist": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nella watchlist di tutti"
+          }
+        }
+      }
+    },
+    "Let chance pick from the films in your watchlist, or only from your ranking.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lascia scegliere al caso tra i film della tua watchlist o solo tra quelli in classifica."
+          }
+        }
+      }
+    },
+    "Letterboxd temporarily blocked the request. Try again shortly or import the CSV.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Letterboxd ha temporaneamente bloccato la richiesta. Riprova tra poco oppure importa il CSV."
+          }
+        }
+      }
+    },
+    "Letterboxd username": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nome utente Letterboxd"
+          }
+        }
+      }
+    },
+    "List": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lista"
+          }
+        }
+      }
+    },
+    "Lists": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liste"
+          }
+        }
+      }
+    },
+    "Load watchlist": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carica watchlist"
+          }
+        }
+      }
+    },
+    "Loading @%@…": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carico @%@…"
+          }
+        }
+      }
+    },
+    "Movie night": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serata film"
+          }
+        }
+      }
+    },
+    "My ranking": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La mia classifica"
+          }
+        }
+      }
+    },
+    "Name": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nome"
+          }
+        }
+      }
+    },
+    "New list": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nuova lista"
+          }
+        }
+      }
+    },
+    "Newest release": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uscita più recente"
+          }
+        }
+      }
+    },
+    "No Letterboxd user with this name.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nessun utente Letterboxd con questo nome."
+          }
+        }
+      }
+    },
+    "No film is in everyone’s watchlist. Try with fewer people.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nessun film è nella watchlist di tutti. Prova con meno persone."
+          }
+        }
+      }
+    },
+    "OK": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        }
+      }
+    },
+    "Oldest release": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uscita meno recente"
+          }
+        }
+      }
+    },
+    "Open on Letterboxd": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apri su Letterboxd"
+          }
+        }
+      }
+    },
+    "Pick a film": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scegli un film"
+          }
+        }
+      }
+    },
+    "Pick a film in common at random": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scegli a caso un film in comune"
+          }
+        }
+      }
+    },
+    "Pick another": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scegli un altro"
+          }
+        }
+      }
+    },
+    "Pick from": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scegli da"
+          }
+        }
+      }
+    },
+    "Posters, synopses and credits provided by TMDb. Smarterboxd is not affiliated with Letterboxd.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Locandine, trame e crediti forniti da TMDb. Smarterboxd non è affiliata a Letterboxd."
+          }
+        }
+      }
+    },
+    "Random": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Random"
+          }
+        }
+      }
+    },
+    "Rank": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In classifica"
+          }
+        }
+      }
+    },
+    "Ranking": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Classifica"
+          }
+        }
+      }
+    },
+    "Recently added": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiunti di recente"
+          }
+        }
+      }
+    },
+    "Remove": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rimuovi"
+          }
+        }
+      }
+    },
+    "Remove from ranking": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rimuovi dalla classifica"
+          }
+        }
+      }
+    },
+    "Rename": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rinomina"
+          }
+        }
+      }
+    },
+    "Rename list": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rinomina lista"
+          }
+        }
+      }
+    },
+    "Restore hidden films (%lld)": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ripristina film nascosti (%lld)"
+          }
+        }
+      }
+    },
+    "Search": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerca"
+          }
+        }
+      }
+    },
+    "Share": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Condividi"
+          }
+        }
+      }
+    },
+    "Sort": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ordina"
+          }
+        }
+      }
+    },
+    "Sort and view": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ordina e visualizza"
+          }
+        }
+      }
+    },
+    "Sync failed": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sincronizzazione non riuscita"
+          }
+        }
+      }
+    },
+    "Sync now": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sincronizza ora"
+          }
+        }
+      }
+    },
+    "Synopsis": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trama"
+          }
+        }
+      }
+    },
+    "Synopsis not available.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trama non disponibile."
+          }
+        }
+      }
+    },
+    "Tap a friend to include or exclude them tonight. Their watchlists must be public.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca un amico per includerlo o escluderlo stasera. Le watchlist devono essere pubbliche."
+          }
+        }
+      }
+    },
+    "Tap the star next to a film to add it here, or press and hold a poster to choose a list.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca la stella accanto a un film per aggiungerlo qui, oppure tieni premuto su una locandina per scegliere una lista."
+          }
+        }
+      }
+    },
+    "That’s you! Add a friend’s username.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sei tu! Aggiungi il nome utente di un amico."
+          }
+        }
+      }
+    },
+    "The films stay in your watchlist.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I film restano nella tua watchlist."
+          }
+        }
+      }
+    },
+    "The watchlist is empty or not public.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La watchlist è vuota o non è pubblica."
+          }
+        }
+      }
+    },
+    "This file doesn’t look like a Letterboxd watchlist.csv.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il file non sembra un watchlist.csv di Letterboxd."
+          }
+        }
+      }
+    },
+    "This list is empty": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa lista è vuota"
+          }
+        }
+      }
+    },
+    "This list is empty.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa lista è vuota."
+          }
+        }
+      }
+    },
+    "Title (A–Z)": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Titolo (A–Z)"
+          }
+        }
+      }
+    },
+    "Title or year": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Titolo o anno"
+          }
+        }
+      }
+    },
+    "Together": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insieme"
+          }
+        }
+      }
+    },
+    "Unexpected response from Letterboxd (code %lld).": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Risposta inattesa da Letterboxd (codice %lld)."
+          }
+        }
+      }
+    },
+    "Updated %@.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiornata %@."
+          }
+        }
+      }
+    },
+    "View": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vista"
+          }
+        }
+      }
+    },
+    "Watchlist": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Watchlist"
+          }
+        }
+      }
+    },
+    "What should we watch tonight?": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cosa guardiamo stasera?"
+          }
+        }
+      }
+    },
+    "Whole watchlist": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tutta la watchlist"
+          }
+        }
+      }
+    },
+    "Who’s watching": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chi guarda"
+          }
+        }
+      }
+    },
+    "You": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu"
+          }
+        }
+      }
+    },
+    "Your Letterboxd watchlist,\nsorted, ranked and shuffled.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La tua watchlist di Letterboxd,\nordinata, classificata e a sorte."
+          }
+        }
+      }
+    },
+    "Your watchlist": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La tua watchlist"
+          }
+        }
+      }
+    },
+    "Your watchlist must be public.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La watchlist deve essere pubblica."
+          }
+        }
+      }
+    },
+    "You’ve hidden every film. You can restore them in Settings.": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hai nascosto tutti i film. Puoi ripristinarli dalle impostazioni."
+          }
+        }
+      }
+    },
+    "by **%@**": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "di **%@**"
+          }
+        }
+      }
+    },
+    "or": {
+      "localizations": {
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "oppure"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

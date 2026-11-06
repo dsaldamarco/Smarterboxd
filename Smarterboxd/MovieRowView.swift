@@ -6,12 +6,14 @@ struct MovieRowView: View {
     let movie: Movie
     var rank: Int? = nil
     var showsStar = true
+    /// Riga aggiuntiva sotto il titolo (es. chi ha il film in watchlist).
+    var footnote: String? = nil
 
     var body: some View {
         MovieDetailsLoader(movie: movie) { details, loaded in
             HStack(spacing: 14) {
                 if let rank {
-                    Text("\(rank)")
+                    Text(verbatim: "\(rank)")
                         .font(.title3.weight(.semibold).monospacedDigit())
                         .foregroundStyle(rank <= 3 ? AnyShapeStyle(.orange) : AnyShapeStyle(.tertiary))
                         .frame(minWidth: 28)
@@ -28,11 +30,17 @@ struct MovieRowView: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
+                    if let footnote {
+                        Label(footnote, systemImage: "person.2")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                            .lineLimit(2)
+                    }
                 }
 
                 Spacer(minLength: 0)
 
-                if showsStar {
+                if showsStar, store.isInWatchlist(movie) {
                     let ranked = store.isRanked(movie)
                     Button {
                         withAnimation(.snappy) { store.toggleRanked(movie) }
@@ -46,7 +54,7 @@ struct MovieRowView: View {
                     }
                     .buttonStyle(.plain)
                     .sensoryFeedback(.selection, trigger: ranked)
-                    .accessibilityLabel(ranked ? "Rimuovi dalla classifica" : "Aggiungi alla classifica")
+                    .accessibilityLabel(ranked ? Text("Remove from ranking") : Text("Add to ranking"))
                 }
             }
             .padding(.vertical, 4)

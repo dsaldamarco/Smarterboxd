@@ -11,8 +11,8 @@ nonisolated enum CSVParser {
 
         var errorDescription: String? {
             switch self {
-            case .unreadable: "Impossibile leggere il file."
-            case .wrongFormat: "Il file non sembra un watchlist.csv di Letterboxd."
+            case .unreadable: String(localized: "Couldn’t read the file.")
+            case .wrongFormat: String(localized: "This file doesn’t look like a Letterboxd watchlist.csv.")
             }
         }
     }

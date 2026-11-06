@@ -27,6 +27,7 @@ struct MovieDetailView: View {
             }
         }
         .ignoresSafeArea(edges: .top)
+        .tracksTabBarScroll()
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             if let url = movie.letterboxdURL {
@@ -81,7 +82,7 @@ struct MovieDetailView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                 if let director = details?.director {
-                    Text("di **\(director)**")
+                    Text("by **\(director)**")
                         .font(.subheadline)
                 }
             }
@@ -92,28 +93,29 @@ struct MovieDetailView: View {
     private var actions: some View {
         GlassEffectContainer(spacing: 12) {
             HStack(spacing: 12) {
-                let rank = store.rank(of: movie)
-                Group {
-                    if let rank {
-                        Button { toggle() } label: {
-                            Label("#\(rank) in classifica", systemImage: "star.fill")
-                                .frame(maxWidth: .infinity)
+                if store.isInWatchlist(movie) {
+                    rankButton
+
+                    if store.lists.count > 1 {
+                        Menu {
+                            ForEach(store.lists) { list in
+                                Toggle(list.title, isOn: Binding(
+                                    get: { store.list(list.id, contains: movie) },
+                                    set: { _ in withAnimation(.snappy) { store.toggle(movie, in: list.id) } }
+                                ))
+                            }
+                        } label: {
+                            Image(systemName: "square.stack")
+                                .accessibilityLabel("Add to list")
                         }
                         .buttonStyle(.glass)
-                    } else {
-                        Button { toggle() } label: {
-                            Label("Aggiungi alla classifica", systemImage: "star")
-                                .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(.glassProminent)
                     }
                 }
-                .sensoryFeedback(.selection, trigger: rank)
 
                 if let url = movie.letterboxdURL {
                     Link(destination: url) {
                         Image(systemName: "arrow.up.right")
-                            .accessibilityLabel("Apri su Letterboxd")
+                            .accessibilityLabel("Open on Letterboxd")
                     }
                     .buttonStyle(.glass)
                 }
@@ -121,6 +123,38 @@ struct MovieDetailView: View {
             .font(.body.weight(.semibold))
             .controlSize(.large)
         }
+    }
+
+    /// Aggiunge o toglie il film dalla classifica aperta.
+    @ViewBuilder
+    private var rankButton: some View {
+        let rank = store.rank(of: movie)
+        let multipleLists = store.lists.count > 1
+        let listName = store.activeList.title
+        Group {
+            if let rank {
+                Button { toggle() } label: {
+                    Group {
+                        if multipleLists { Label("#\(rank) in “\(listName)”", systemImage: "star.fill") }
+                        else { Label("#\(rank) in ranking", systemImage: "star.fill") }
+                    }
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.glass)
+            } else {
+                Button { toggle() } label: {
+                    Group {
+                        if multipleLists { Label("Add to “\(listName)”", systemImage: "star") }
+                        else { Label("Add to ranking", systemImage: "star") }
+                    }
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.glassProminent)
+            }
+        }
+        .sensoryFeedback(.selection, trigger: rank)
     }
 
     @ViewBuilder
@@ -146,19 +180,19 @@ struct MovieDetailView: View {
             }
 
             VStack(alignment: .leading, spacing: 8) {
-                Text("Trama").font(.title3.weight(.bold))
-                Text(details.overview ?? "Trama non disponibile.")
+                Text("Synopsis").font(.title3.weight(.bold))
+                Text(details.overview ?? String(localized: "Synopsis not available."))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
         } else if !isLoaded {
             ProgressView().frame(maxWidth: .infinity)
         } else {
-            Text("Dettagli non disponibili.").foregroundStyle(.secondary)
+            Text("Details not available.").foregroundStyle(.secondary)
         }
 
         if let date = movie.formattedDateAdded {
-            Label("Aggiunto il \(date)", systemImage: "calendar")
+            Label("Added on \(date)", systemImage: "calendar")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
         }

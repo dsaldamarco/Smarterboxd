@@ -6,7 +6,6 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var isImporting = false
-    @State private var confirmClear = false
     @State private var importError: String?
 
     var body: some View {
@@ -31,7 +30,7 @@ struct SettingsView: View {
                             Task { await store.refresh() }
                         } label: {
                             HStack {
-                                Label("Sincronizza ora", systemImage: "arrow.triangle.2.circlepath")
+                                Label("Sync now", systemImage: "arrow.triangle.2.circlepath")
                                 Spacer()
                                 if store.isSyncing { ProgressView() }
                             }
@@ -40,24 +39,22 @@ struct SettingsView: View {
                     }
                 } footer: {
                     if let lastSync = store.lastSync {
-                        Text("Aggiornata \(lastSync.formatted(Date.RelativeFormatStyle(presentation: .named, locale: .italian))).")
+                        Text("Updated \(lastSync.formatted(.relative(presentation: .named))).")
                     }
                 }
 
                 Section("Watchlist") {
-                    LabeledContent("Film", value: "\(store.visibleMovies.count)")
-                    LabeledContent("In classifica", value: "\(store.rankedMovies.count)")
-                    Button("Ripristina film nascosti (\(store.hiddenCount))") {
+                    LabeledContent("Films", value: store.visibleMovies.count.formatted())
+                    LabeledContent("Lists", value: store.lists.count.formatted())
+                    Button("Restore hidden films (\(store.hiddenCount))") {
                         withAnimation { store.unhideAll() }
                     }
                     .disabled(store.hiddenCount == 0)
-                    Button("Svuota classifica", role: .destructive) { confirmClear = true }
-                        .disabled(store.rankedIDs.isEmpty)
                 }
 
                 Section {
-                    Button("Importa watchlist.csv", systemImage: "doc.badge.arrow.up") { isImporting = true }
-                    Button("Cambia account", systemImage: "rectangle.portrait.and.arrow.right", role: .destructive) {
+                    Button("Import watchlist.csv", systemImage: "doc.badge.arrow.up") { isImporting = true }
+                    Button("Change account", systemImage: "rectangle.portrait.and.arrow.right", role: .destructive) {
                         dismiss()
                         store.signOut()
                     }
@@ -67,7 +64,7 @@ struct SettingsView: View {
 
                 Section {
                 } footer: {
-                    Text("Locandine, trame e crediti forniti da TMDb. Smarterboxd non è affiliata a Letterboxd.")
+                    Text("Posters, synopses and credits provided by TMDb. Smarterboxd is not affiliated with Letterboxd.")
                         .frame(maxWidth: .infinity)
                         .multilineTextAlignment(.center)
                 }
@@ -78,9 +75,6 @@ struct SettingsView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button(role: .close) { dismiss() }
                 }
-            }
-            .confirmationDialog("Svuotare la classifica?", isPresented: $confirmClear, titleVisibility: .visible) {
-                Button("Svuota", role: .destructive) { store.clearRanking() }
             }
             .fileImporter(isPresented: $isImporting, allowedContentTypes: [.commaSeparatedText, .plainText]) { result in
                 do {
@@ -96,14 +90,14 @@ struct SettingsView: View {
     private var title: String {
         switch store.source {
         case .letterboxd: store.displayName ?? store.username ?? "Letterboxd"
-        default: "Watchlist importata"
+        default: String(localized: "Imported watchlist")
         }
     }
 
     private var subtitle: String {
         switch store.source {
         case .letterboxd: "@\(store.username ?? "")"
-        default: "Da file CSV"
+        default: String(localized: "From CSV file")
         }
     }
 

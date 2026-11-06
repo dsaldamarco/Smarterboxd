@@ -1,4 +1,4 @@
-import Foundation
+import SwiftUI
 
 /// Un film della watchlist.
 /// `id` è l'URL breve di Letterboxd (es. "https://boxd.it/2a2Y"): è lo stesso
@@ -25,13 +25,8 @@ nonisolated struct Movie: Identifiable, Hashable, Codable, Sendable {
         guard let dateAdded,
               let date = try? Date(dateAdded, strategy: .iso8601.year().month().day())
         else { return nil }
-        return date.formatted(.dateTime.day().month(.wide).year().locale(.italian))
+        return date.formatted(date: .long, time: .omitted)
     }
-}
-
-nonisolated extension Locale {
-    /// L'interfaccia è in italiano: date e orari seguono la stessa lingua.
-    static let italian = Locale(identifier: "it_IT")
 }
 
 enum SortOrder: String, CaseIterable, Identifiable {
@@ -39,13 +34,13 @@ enum SortOrder: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    var label: String {
+    var label: LocalizedStringKey {
         switch self {
-        case .addedNewest: "Aggiunti di recente"
-        case .addedOldest: "Aggiunti per primi"
-        case .releaseNewest: "Uscita più recente"
-        case .releaseOldest: "Uscita meno recente"
-        case .title: "Titolo (A–Z)"
+        case .addedNewest: "Recently added"
+        case .addedOldest: "First added"
+        case .releaseNewest: "Newest release"
+        case .releaseOldest: "Oldest release"
+        case .title: "Title (A–Z)"
         }
     }
 

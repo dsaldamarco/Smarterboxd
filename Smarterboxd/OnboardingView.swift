@@ -17,9 +17,9 @@ struct OnboardingView: View {
                 Spacer()
 
                 VStack(spacing: 12) {
-                    Text("Smarterboxd")
+                    Text(verbatim: "Smarterboxd")
                         .font(.custom("SharpGrotesk-SemiBold20", size: 44, relativeTo: .largeTitle))
-                    Text("La tua watchlist di Letterboxd,\nordinata, classificata e a sorte.")
+                    Text("Your Letterboxd watchlist,\nsorted, ranked and shuffled.")
                         .font(.title3)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -31,7 +31,7 @@ struct OnboardingView: View {
                     HStack(spacing: 8) {
                         Image(systemName: "at")
                             .foregroundStyle(.secondary)
-                        TextField("Nome utente Letterboxd", text: $username)
+                        TextField("Letterboxd username", text: $username)
                             .textInputAutocapitalization(.never)
                             .autocorrectionDisabled()
                             .textContentType(.username)
@@ -49,7 +49,7 @@ struct OnboardingView: View {
                             if store.isSyncing {
                                 ProgressView().tint(.white)
                             } else {
-                                Text("Carica watchlist")
+                                Text("Load watchlist")
                             }
                         }
                         .font(.body.weight(.semibold))
@@ -67,13 +67,13 @@ struct OnboardingView: View {
                             .transition(.opacity.combined(with: .move(edge: .top)))
                     }
 
-                    Text("La watchlist deve essere pubblica.")
+                    Text("Your watchlist must be public.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
 
                     HStack {
                         VStack { Divider() }
-                        Text("oppure").font(.footnote).foregroundStyle(.tertiary)
+                        Text("or").font(.footnote).foregroundStyle(.tertiary)
                         VStack { Divider() }
                     }
                     .padding(.vertical, 6)
@@ -81,7 +81,7 @@ struct OnboardingView: View {
                     Button {
                         isImporting = true
                     } label: {
-                        Label("Importa watchlist.csv", systemImage: "doc.badge.arrow.up")
+                        Label("Import watchlist.csv", systemImage: "doc.badge.arrow.up")
                             .font(.body.weight(.medium))
                             .frame(maxWidth: .infinity, minHeight: 44)
                     }
@@ -89,7 +89,7 @@ struct OnboardingView: View {
                     .controlSize(.large)
                     .disabled(store.isSyncing)
 
-                    Text("Da Letterboxd › Impostazioni › Dati › Esporta i tuoi dati.")
+                    Text("From Letterboxd › Settings › Data › Export your data.")
                         .font(.caption)
                         .foregroundStyle(.tertiary)
                         .multilineTextAlignment(.center)

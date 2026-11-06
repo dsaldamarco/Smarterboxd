@@ -49,7 +49,12 @@ actor TMDbService {
     private var inFlight: [String: Task<MovieDetails?, Never>] = [:]
     private var saveTask: Task<Void, Never>?
 
-    private let cacheURL = URL.cachesDirectory.appending(path: "tmdb-cache-v2.json")
+    /// Lingua di trame e generi: la stessa in cui è mostrata l'app (inglese o italiano).
+    private nonisolated static let language: String =
+        Bundle.main.preferredLocalizations.first?.hasPrefix("it") == true ? "it-IT" : "en-US"
+
+    // Una cache per lingua, così cambiando lingua del sistema non restano trame nella lingua vecchia.
+    private let cacheURL = URL.cachesDirectory.appending(path: "tmdb-cache-v3-\(TMDbService.language).json")
 
     init() {
         if let data = try? Data(contentsOf: cacheURL),
@@ -87,12 +92,13 @@ actor TMDbService {
         if hit == nil, !year.isEmpty { hit = await search(title: title, year: nil) }
         guard let hit else { return nil }
 
-        // 2. Trama e generi in italiano; crediti in inglese, perché in italiano
-        //    TMDb restituisce i nomi nella grafia originale (es. "楊德昌" invece di "Edward Yang").
-        async let italianTask = movieDetails(id: hit.id, language: "it-IT", credits: false)
+        // 2. Trama e generi nella lingua dell'app; crediti sempre in inglese, perché nelle altre
+        //    lingue TMDb restituisce i nomi nella grafia originale (es. "楊德昌" invece di "Edward Yang").
+        let language = Self.language
+        async let localizedTask = language == "en-US" ? nil : movieDetails(id: hit.id, language: language, credits: false)
         async let englishTask = movieDetails(id: hit.id, language: "en-US", credits: true)
-        let (italian, english) = await (italianTask, englishTask)
-        let primary = italian ?? english
+        let (localized, english) = await (localizedTask, englishTask)
+        let primary = localized ?? english
 
         func nonEmpty(_ s: String?) -> String? { (s?.isEmpty ?? true) ? nil : s }
 
@@ -100,8 +106,8 @@ actor TMDbService {
             tmdbID: hit.id,
             posterPath: hit.poster_path ?? primary?.poster_path,
             backdropPath: primary?.backdrop_path ?? hit.backdrop_path,
-            overview: nonEmpty(italian?.overview) ?? nonEmpty(english?.overview),
-            tagline: nonEmpty(italian?.tagline) ?? nonEmpty(english?.tagline),
+            overview: nonEmpty(localized?.overview) ?? nonEmpty(english?.overview),
+            tagline: nonEmpty(localized?.tagline) ?? nonEmpty(english?.tagline),
             director: english?.credits?.crew.first { $0.job == "Director" }?.name,
             runtime: primary?.runtime,
             genres: primary?.genres?.map(\.name) ?? [],

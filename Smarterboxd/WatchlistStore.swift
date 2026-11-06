@@ -1,13 +1,25 @@
 import Foundation
 import SwiftUI
 
-/// Stato condiviso dell'app: watchlist, classifica, film nascosti e account.
+/// Una classifica personale (es. "Da vedere con gli amici").
+nonisolated struct RankedList: Identifiable, Codable, Hashable, Sendable {
+    var id = UUID()
+    /// Vuoto per la classifica predefinita, finché non viene rinominata.
+    var name: String
+    var movieIDs: [String] = []
+
+    /// Nome da mostrare: quello della classifica predefinita segue la lingua dell'app.
+    var title: String { name.isEmpty ? String(localized: "My ranking") : name }
+}
+
+/// Stato condiviso dell'app: watchlist, classifiche, film nascosti e account.
 @Observable
 final class WatchlistStore {
 
     enum Source: String { case letterboxd, csv }
 
-    private(set) var movies: [Movie] = []
+    private(set) var movies: [Movie] = [] { didSet { movieIDs = Set(movies.map(\.id)) } }
+    @ObservationIgnored private var movieIDs: Set<String> = []
     private(set) var source: Source?
     private(set) var username: String?
     private(set) var displayName: String?
@@ -15,7 +27,10 @@ final class WatchlistStore {
     private(set) var isSyncing = false
     var syncError: String?
 
-    private(set) var rankedIDs: [String] = [] { didSet { defaults.set(rankedIDs, forKey: Keys.ranked) } }
+    /// Tutte le classifiche; ce n'è sempre almeno una.
+    private(set) var lists: [RankedList] = [] { didSet { saveLists() } }
+    /// La classifica aperta: la stella e i badge si riferiscono a questa.
+    var activeListID = UUID() { didSet { defaults.set(activeListID.uuidString, forKey: Keys.activeList) } }
     private(set) var hiddenIDs: Set<String> = [] { didSet { defaults.set(Array(hiddenIDs), forKey: Keys.hidden) } }
 
     @ObservationIgnored private let defaults = UserDefaults.standard
@@ -23,7 +38,9 @@ final class WatchlistStore {
 
     private enum Keys {
         // Stesse chiavi della versione precedente, così classifica e film cancellati restano.
-        static let ranked = "rankedMovieIDs"
+        static let ranked = "rankedMovieIDs"   // vecchia classifica unica, migrata in `lists`
+        static let lists = "rankedLists"
+        static let activeList = "activeListID"
         static let hidden = "deletedMovieIDs"
         static let source = "source"
         static let username = "username"
@@ -32,7 +49,16 @@ final class WatchlistStore {
     }
 
     init() {
-        rankedIDs = defaults.stringArray(forKey: Keys.ranked) ?? []
+        if let data = defaults.data(forKey: Keys.lists),
+           let saved = try? JSONDecoder().decode([RankedList].self, from: data), !saved.isEmpty {
+            lists = saved
+        } else {
+            // Prima apertura, o aggiornamento dalla versione con una sola classifica.
+            lists = [RankedList(name: "",
+                                movieIDs: defaults.stringArray(forKey: Keys.ranked) ?? [])]
+        }
+        let savedActive = defaults.string(forKey: Keys.activeList).flatMap(UUID.init)
+        activeListID = lists.contains { $0.id == savedActive } ? savedActive! : lists[0].id
         hiddenIDs = Set(defaults.stringArray(forKey: Keys.hidden) ?? [])
         source = defaults.string(forKey: Keys.source).flatMap(Source.init)
         username = defaults.string(forKey: Keys.username)
@@ -43,6 +69,7 @@ final class WatchlistStore {
             movies = saved
         }
         if movies.isEmpty { source = nil }
+        movieIDs = Set(movies.map(\.id))
         pruneRanking()
     }
 
@@ -52,15 +79,27 @@ final class WatchlistStore {
 
     var visibleMovies: [Movie] { movies.filter { !hiddenIDs.contains($0.id) } }
 
-    var rankedMovies: [Movie] {
-        let lookup = Dictionary(movies.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
-        return rankedIDs.compactMap { lookup[$0] }
-    }
-
     var hiddenCount: Int { movies.count { hiddenIDs.contains($0.id) } }
 
-    func isRanked(_ movie: Movie) -> Bool { rankedIDs.contains(movie.id) }
-    func rank(of movie: Movie) -> Int? { rankedIDs.firstIndex(of: movie.id).map { $0 + 1 } }
+    func isInWatchlist(_ movie: Movie) -> Bool { movieIDs.contains(movie.id) }
+
+    // MARK: - Classifiche (lettura)
+
+    var activeList: RankedList { lists.first { $0.id == activeListID } ?? lists[0] }
+
+    /// Film della classifica aperta, nell'ordine scelto.
+    var rankedMovies: [Movie] { movies(in: activeList) }
+
+    func movies(in list: RankedList) -> [Movie] {
+        let lookup = Dictionary(movies.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        return list.movieIDs.compactMap { lookup[$0] }
+    }
+
+    func isRanked(_ movie: Movie) -> Bool { activeList.movieIDs.contains(movie.id) }
+    func rank(of movie: Movie) -> Int? { activeList.movieIDs.firstIndex(of: movie.id).map { $0 + 1 } }
+    func list(_ id: UUID, contains movie: Movie) -> Bool {
+        lists.first { $0.id == id }?.movieIDs.contains(movie.id) ?? false
+    }
 
     // MARK: - Fonti dati
 
@@ -121,36 +160,73 @@ final class WatchlistStore {
         if let data = try? JSONEncoder().encode(movies) { try? data.write(to: moviesURL, options: .atomic) }
     }
 
-    /// Toglie dalla classifica i film che non sono più in watchlist (es. già visti).
+    /// Toglie dalle classifiche i film che non sono più in watchlist (es. già visti).
     private func pruneRanking() {
         guard !movies.isEmpty else { return }
         let visible = Set(visibleMovies.map(\.id))
-        let pruned = rankedIDs.filter(visible.contains)
-        if pruned != rankedIDs { rankedIDs = pruned }
+        let pruned = lists.map { list in
+            var list = list
+            list.movieIDs = list.movieIDs.filter(visible.contains)
+            return list
+        }
+        if pruned != lists { lists = pruned }
     }
 
-    // MARK: - Classifica
+    private func saveLists() {
+        if let data = try? JSONEncoder().encode(lists) { defaults.set(data, forKey: Keys.lists) }
+    }
 
-    func toggleRanked(_ movie: Movie) {
-        if let index = rankedIDs.firstIndex(of: movie.id) { rankedIDs.remove(at: index) }
-        else { rankedIDs.append(movie.id) }
+    private func updateList(_ id: UUID, _ change: (inout RankedList) -> Void) {
+        guard let index = lists.firstIndex(where: { $0.id == id }) else { return }
+        change(&lists[index])
+    }
+
+    // MARK: - Classifiche (modifica)
+
+    /// Aggiunge o toglie il film dalla classifica aperta.
+    func toggleRanked(_ movie: Movie) { toggle(movie, in: activeListID) }
+
+    func toggle(_ movie: Movie, in listID: UUID) {
+        updateList(listID) { list in
+            if let index = list.movieIDs.firstIndex(of: movie.id) { list.movieIDs.remove(at: index) }
+            else { list.movieIDs.append(movie.id) }
+        }
     }
 
     func moveRanked(from source: IndexSet, to destination: Int) {
-        rankedIDs.move(fromOffsets: source, toOffset: destination)
+        updateList(activeListID) { $0.movieIDs.move(fromOffsets: source, toOffset: destination) }
     }
 
     func removeRanked(at offsets: IndexSet) {
-        rankedIDs.remove(atOffsets: offsets)
+        updateList(activeListID) { $0.movieIDs.remove(atOffsets: offsets) }
     }
 
-    func clearRanking() { rankedIDs = [] }
+    func clearRanking() { updateList(activeListID) { $0.movieIDs = [] } }
+
+    /// Crea una classifica nuova e la apre.
+    func createList(named name: String) {
+        let list = RankedList(name: name)
+        lists.append(list)
+        activeListID = list.id
+    }
+
+    func renameList(_ id: UUID, to name: String) { updateList(id) { $0.name = name } }
+
+    func deleteList(_ id: UUID) {
+        guard lists.count > 1 else { return }
+        lists.removeAll { $0.id == id }
+        if activeListID == id { activeListID = lists[0].id }
+    }
 
     // MARK: - Film nascosti
 
     func hide(_ movie: Movie) {
         hiddenIDs.insert(movie.id)
-        rankedIDs.removeAll { $0 == movie.id }
+        lists = lists.map { list in
+            var list = list
+            list.movieIDs.removeAll { $0 == movie.id }
+            return list
+        }
     }
 
     func unhideAll() { hiddenIDs = [] }

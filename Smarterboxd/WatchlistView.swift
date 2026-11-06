@@ -2,22 +2,35 @@ import SwiftUI
 
 struct WatchlistView: View {
     @Environment(WatchlistStore.self) private var store
+    @Environment(TabBarScrollState.self) private var tabBar: TabBarScrollState?
 
     enum Layout: String { case grid, list }
 
     @AppStorage("sortOrder") private var sortOrder: SortOrder = .addedNewest
     @AppStorage("layout") private var layout: Layout = .grid
     @State private var showSettings = false
+    @State private var query = ""
+    @State private var isSearching = false
 
-    private var movies: [Movie] { sortOrder.sorted(store.visibleMovies) }
+    private var trimmedQuery: String { query.trimmingCharacters(in: .whitespaces) }
+
+    /// Watchlist ordinata, filtrata dalla ricerca (per titolo o anno).
+    private var movies: [Movie] {
+        let all = sortOrder.sorted(store.visibleMovies)
+        let q = trimmedQuery
+        guard !q.isEmpty else { return all }
+        return all.filter { $0.title.localizedStandardContains(q) || $0.year == q }
+    }
 
     var body: some View {
         @Bindable var store = store
         NavigationStack {
             Group {
-                if movies.isEmpty {
-                    ContentUnavailableView("Watchlist vuota", systemImage: "film.stack",
-                                           description: Text("Hai nascosto tutti i film. Puoi ripristinarli dalle impostazioni."))
+                if movies.isEmpty, !trimmedQuery.isEmpty {
+                    ContentUnavailableView.search(text: trimmedQuery)
+                } else if movies.isEmpty {
+                    ContentUnavailableView("Empty watchlist", systemImage: "film.stack",
+                                           description: Text("You’ve hidden every film. You can restore them in Settings."))
                 } else if layout == .grid {
                     gridView
                 } else {
@@ -29,8 +42,16 @@ struct WatchlistView: View {
             .movieNavigation()
             .refreshable { await store.refresh() }
             .toolbar { toolbar }
+            // La barra di ricerca esiste solo mentre si cerca: aperta dalla lente in alto,
+            // sparisce del tutto quando la si chiude.
+            .modifier(SearchWhenActive(isActive: isSearching, query: $query, isPresented: $isSearching))
+            .onChange(of: isSearching) { _, searching in
+                tabBar?.isPaused = searching
+                // Chiudendo la ricerca si torna sempre alla watchlist completa.
+                if !searching { query = "" }
+            }
             .sheet(isPresented: $showSettings) { SettingsView() }
-            .alert("Sincronizzazione non riuscita", isPresented: Binding(
+            .alert("Sync failed", isPresented: Binding(
                 get: { store.syncError != nil }, set: { if !$0 { store.syncError = nil } }
             )) {
                 Button("OK", role: .cancel) {}
@@ -40,10 +61,8 @@ struct WatchlistView: View {
         }
     }
 
-    private var subtitle: String {
-        let count = "\(movies.count) film"
-        if store.isSyncing { return "\(count) · Aggiornamento…" }
-        return count
+    private var subtitle: Text {
+        store.isSyncing ? Text("\(movies.count) films · Updating…") : Text("\(movies.count) films")
     }
 
     private var gridView: some View {
@@ -62,6 +81,7 @@ struct WatchlistView: View {
             .padding(.bottom)
             .animation(.snappy, value: movies)
         }
+        .tracksTabBarScroll()
     }
 
     private var listView: some View {
@@ -71,19 +91,20 @@ struct WatchlistView: View {
             }
             .contextMenu { MovieActions(movie: movie) }
             .swipeActions(edge: .trailing) {
-                Button("Nascondi", systemImage: "eye.slash", role: .destructive) {
+                Button("Hide", systemImage: "eye.slash", role: .destructive) {
                     withAnimation { store.hide(movie) }
                 }
             }
             .swipeActions(edge: .leading) {
                 let ranked = store.isRanked(movie)
-                Button(ranked ? "Rimuovi" : "Classifica", systemImage: ranked ? "star.slash" : "star.fill") {
+                Button(ranked ? LocalizedStringKey("Remove") : LocalizedStringKey("Rank"), systemImage: ranked ? "star.slash" : "star.fill") {
                     withAnimation { store.toggleRanked(movie) }
                 }
                 .tint(.orange)
             }
         }
         .listStyle(.plain)
+        .tracksTabBarScroll()
     }
 
     @ToolbarContentBuilder
@@ -92,23 +113,47 @@ struct WatchlistView: View {
             Button { showSettings = true } label: {
                 Image(systemName: "person.crop.circle")
             }
-            .accessibilityLabel("Account e impostazioni")
+            .accessibilityLabel("Account and settings")
         }
         ToolbarItemGroup(placement: .topBarTrailing) {
             Menu {
-                Picker("Ordina", selection: $sortOrder.animation()) {
+                Picker("Sort", selection: $sortOrder.animation()) {
                     ForEach(SortOrder.allCases) { Text($0.label).tag($0) }
                 }
                 Section {
-                    Picker("Vista", selection: $layout.animation()) {
-                        Label("Griglia", systemImage: "square.grid.3x2").tag(Layout.grid)
-                        Label("Lista", systemImage: "list.bullet").tag(Layout.list)
+                    Picker("View", selection: $layout.animation()) {
+                        Label("Grid", systemImage: "square.grid.3x2").tag(Layout.grid)
+                        Label("List", systemImage: "list.bullet").tag(Layout.list)
                     }
                 }
             } label: {
                 Image(systemName: "line.3.horizontal.decrease")
             }
-            .accessibilityLabel("Ordina e visualizza")
+            .accessibilityLabel("Sort and view")
+
+            Button {
+                withAnimation(.smooth) { isSearching = true }
+            } label: {
+                Image(systemName: "magnifyingglass")
+            }
+            .accessibilityLabel("Search")
+        }
+    }
+}
+
+/// Aggiunge la barra di ricerca solo quando serve.
+private struct SearchWhenActive: ViewModifier {
+    let isActive: Bool
+    @Binding var query: String
+    @Binding var isPresented: Bool
+
+    func body(content: Content) -> some View {
+        if isActive {
+            content.searchable(text: $query, isPresented: $isPresented,
+                               placement: .navigationBarDrawer(displayMode: .always),
+                               prompt: Text("Title or year"))
+        } else {
+            content
         }
     }
 }
