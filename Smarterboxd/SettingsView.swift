@@ -13,11 +13,7 @@ struct SettingsView: View {
             Form {
                 Section {
                     HStack(spacing: 14) {
-                        Text(initial)
-                            .font(.title2.weight(.semibold))
-                            .foregroundStyle(.white)
-                            .frame(width: 52, height: 52)
-                            .background(.orange.gradient, in: .circle)
+                        ProfileAvatar(name: title, url: store.source == .letterboxd ? store.avatarURL : nil, size: 52)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(title).font(.headline)
                             Text(subtitle).font(.subheadline).foregroundStyle(.secondary)
@@ -99,9 +95,5 @@ struct SettingsView: View {
         case .letterboxd: "@\(store.username ?? "")"
         default: String(localized: "From CSV file")
         }
-    }
-
-    private var initial: String {
-        String(title.first.map { String($0).uppercased() } ?? "S")
     }
 }

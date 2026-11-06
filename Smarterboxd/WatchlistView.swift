@@ -111,7 +111,11 @@ struct WatchlistView: View {
     private var toolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
             Button { showSettings = true } label: {
-                Image(systemName: "person.crop.circle")
+                if let avatarURL = store.avatarURL {
+                    ProfileAvatar(name: store.displayName ?? store.username, url: avatarURL, size: 30)
+                } else {
+                    Image(systemName: "person.crop.circle")
+                }
             }
             .accessibilityLabel("Account and settings")
         }

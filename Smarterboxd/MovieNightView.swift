@@ -8,6 +8,7 @@ final class MovieNightModel {
     nonisolated struct Friend: Codable, Hashable, Identifiable, Sendable {
         var username: String
         var isSelected = true
+        var avatarURL: URL?
         var id: String { username }
     }
 
@@ -64,11 +65,30 @@ final class MovieNightModel {
         if username == ownUsername { return String(localized: "That’s you! Add a friend’s username.") }
         if friends.contains(where: { $0.username == username }) { return String(localized: "@\(username) is already in the list.") }
         friends.append(Friend(username: username))
+        // Scarica subito la watchlist: serve per la foto profilo e per accorgersi
+        // presto di nomi sbagliati o profili privati. Resta in cache per il confronto.
+        Task { await preload(username) }
         return nil
     }
 
+    private func preload(_ username: String) async {
+        do {
+            _ = try await watchlist(of: username)
+            errors[username] = nil
+        } catch {
+            errors[username] = error.localizedDescription
+        }
+    }
+
+    /// Scarica la foto profilo degli amici aggiunti prima che l'app la salvasse.
+    func loadMissingAvatars() async {
+        for friend in friends where friend.avatarURL == nil && errors[friend.username] == nil {
+            await preload(friend.username)
+        }
+    }
+
     func toggle(_ friend: Friend) {
-        guard let index = friends.firstIndex(of: friend) else { return }
+        guard let index = friends.firstIndex(where: { $0.id == friend.id }) else { return }
         friends[index].isSelected.toggle()
     }
 
@@ -120,9 +140,13 @@ final class MovieNightModel {
 
     private func watchlist(of username: String) async throws -> [Movie] {
         if let cached = cache[username], Date.now.timeIntervalSince(cached.date) < 15 * 60 { return cached.movies }
-        let movies = try await LetterboxdService.fetchWatchlist(username: username).movies
-        cache[username] = (.now, movies)
-        return movies
+        let watchlist = try await LetterboxdService.fetchWatchlist(username: username)
+        cache[username] = (.now, watchlist.movies)
+        if let index = friends.firstIndex(where: { $0.username == username }),
+           friends[index].avatarURL != watchlist.avatarURL {
+            friends[index].avatarURL = watchlist.avatarURL
+        }
+        return watchlist.movies
     }
 }
 
@@ -143,6 +167,11 @@ struct MovieNightView: View {
                 if model.hasResults { results }
             }
             .tracksTabBarScroll()
+            .task {
+                // Account collegato prima che l'app salvasse la foto profilo: basta una sincronizzazione.
+                if store.avatarURL == nil, store.username != nil { await store.refresh() }
+                await model.loadMissingAvatars()
+            }
             .navigationTitle("Movie night")
             .movieNavigation()
             .toolbar {
@@ -169,7 +198,7 @@ struct MovieNightView: View {
     private var peopleSection: some View {
         Section {
             HStack(spacing: 12) {
-                Avatar(text: store.displayName ?? store.username, isSelected: true)
+                ProfileAvatar(name: store.displayName ?? store.username, url: store.avatarURL)
                 Text(store.username.map { "@\($0)" } ?? String(localized: "Your watchlist"))
                 Spacer()
                 Text("You").foregroundStyle(.secondary)
@@ -179,7 +208,7 @@ struct MovieNightView: View {
                 Button { withAnimation(.snappy) { model.toggle(friend) } } label: {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(spacing: 12) {
-                            Avatar(text: friend.username, isSelected: friend.isSelected)
+                            ProfileAvatar(name: friend.username, url: friend.avatarURL, isDimmed: !friend.isSelected)
                             Text(verbatim: "@\(friend.username)")
                                 .foregroundStyle(friend.isSelected ? .primary : .secondary)
                             Spacer()
@@ -329,25 +358,5 @@ private struct MovieNightPickSheet: View {
         }
         // L'estrazione parte appena si apre il foglio.
         .task { shuffler.shuffle(from: candidates) }
-    }
-}
-
-/// Cerchio con l'iniziale del nome.
-private struct Avatar: View {
-    let text: String?
-    let isSelected: Bool
-
-    var body: some View {
-        Group {
-            if let initial = text?.first {
-                Text(String(initial).uppercased())
-            } else {
-                Image(systemName: "person.fill")
-            }
-        }
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(.white)
-            .frame(width: 32, height: 32)
-            .background(isSelected ? AnyShapeStyle(.orange.gradient) : AnyShapeStyle(.gray.opacity(0.4)), in: .circle)
     }
 }

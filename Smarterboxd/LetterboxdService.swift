@@ -25,6 +25,7 @@ nonisolated enum LetterboxdError: LocalizedError {
 nonisolated struct LetterboxdWatchlist: Sendable {
     let username: String
     let displayName: String?
+    let avatarURL: URL?
     let movies: [Movie]
 }
 
@@ -79,7 +80,8 @@ nonisolated enum LetterboxdService {
             Movie(id: film.id, title: film.title, year: film.year, slug: film.slug,
                   dateAdded: nil, addedIndex: films.count - index)
         }
-        return LetterboxdWatchlist(username: username, displayName: displayName(in: firstPage), movies: movies)
+        return LetterboxdWatchlist(username: username, displayName: displayName(in: firstPage),
+                                   avatarURL: avatarURL(in: firstPage), movies: movies)
     }
 
     // MARK: - Rete
@@ -147,6 +149,21 @@ nonisolated enum LetterboxdService {
     private static func displayName(in html: String) -> String? {
         guard let match = html.firstMatch(of: #/<title>(?:&lrm;)?(.*?)’s Watchlist/#) else { return nil }
         return decodeEntities(String(match.1))
+    }
+
+    /// Foto profilo del proprietario della watchlist: è la prima immagine "avatar" della pagina.
+    /// Letterboxd la serve a 48px; la chiediamo più grande per gli schermi Retina.
+    static func avatarURL(in html: String) -> URL? {
+        guard let match = html.firstMatch(of: #/<img src="([^"]*/avatar[^"]*)"[^>]*width="24"/#) else { return nil }
+        var string = decodeEntities(String(match.1))
+        if string.contains("gravatar.com") {
+            // Senza Gravatar personale meglio l'iniziale che la sagoma grigia di default.
+            guard var components = URLComponents(string: string) else { return nil }
+            components.queryItems = [URLQueryItem(name: "size", value: "144"), URLQueryItem(name: "default", value: "404")]
+            return components.url
+        }
+        string = string.replacingOccurrences(of: "-0-48-0-48-crop", with: "-0-144-0-144-crop")
+        return URL(string: string)
     }
 
     static func decodeEntities(_ string: String) -> String {

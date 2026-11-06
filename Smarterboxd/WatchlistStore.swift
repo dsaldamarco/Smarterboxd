@@ -23,6 +23,7 @@ final class WatchlistStore {
     private(set) var source: Source?
     private(set) var username: String?
     private(set) var displayName: String?
+    private(set) var avatarURL: URL?
     private(set) var lastSync: Date?
     private(set) var isSyncing = false
     var syncError: String?
@@ -45,6 +46,7 @@ final class WatchlistStore {
         static let source = "source"
         static let username = "username"
         static let displayName = "displayName"
+        static let avatarURL = "avatarURL"
         static let lastSync = "lastSync"
     }
 
@@ -63,6 +65,7 @@ final class WatchlistStore {
         source = defaults.string(forKey: Keys.source).flatMap(Source.init)
         username = defaults.string(forKey: Keys.username)
         displayName = defaults.string(forKey: Keys.displayName)
+        avatarURL = defaults.url(forKey: Keys.avatarURL)
         lastSync = defaults.object(forKey: Keys.lastSync) as? Date
         if let data = try? Data(contentsOf: moviesURL),
            let saved = try? JSONDecoder().decode([Movie].self, from: data) {
@@ -107,12 +110,13 @@ final class WatchlistStore {
         isSyncing = true
         defer { isSyncing = false }
         let watchlist = try await LetterboxdService.fetchWatchlist(username: raw)
-        apply(movies: watchlist.movies, source: .letterboxd, username: watchlist.username, displayName: watchlist.displayName)
+        apply(movies: watchlist.movies, source: .letterboxd, username: watchlist.username, displayName: watchlist.displayName,
+              avatarURL: watchlist.avatarURL)
     }
 
     func importCSV(from url: URL) throws {
         let movies = try CSVParser.loadMovies(from: url)
-        apply(movies: movies, source: .csv, username: nil, displayName: nil)
+        apply(movies: movies, source: .csv, username: nil, displayName: nil, avatarURL: nil)
     }
 
     func refresh() async {
@@ -139,22 +143,25 @@ final class WatchlistStore {
         source = nil
         username = nil
         displayName = nil
+        avatarURL = nil
         lastSync = nil
         try? FileManager.default.removeItem(at: moviesURL)
-        for key in [Keys.source, Keys.username, Keys.displayName, Keys.lastSync] { defaults.removeObject(forKey: key) }
+        for key in [Keys.source, Keys.username, Keys.displayName, Keys.avatarURL, Keys.lastSync] { defaults.removeObject(forKey: key) }
     }
 
-    private func apply(movies: [Movie], source: Source, username: String?, displayName: String?) {
+    private func apply(movies: [Movie], source: Source, username: String?, displayName: String?, avatarURL: URL?) {
         self.movies = movies
         self.source = source
         self.username = username
         self.displayName = displayName
+        self.avatarURL = avatarURL
         self.lastSync = .now
         pruneRanking()
 
         defaults.set(source.rawValue, forKey: Keys.source)
         defaults.set(username, forKey: Keys.username)
         defaults.set(displayName, forKey: Keys.displayName)
+        defaults.set(avatarURL, forKey: Keys.avatarURL)
         defaults.set(lastSync, forKey: Keys.lastSync)
         try? FileManager.default.createDirectory(at: .applicationSupportDirectory, withIntermediateDirectories: true)
         if let data = try? JSONEncoder().encode(movies) { try? data.write(to: moviesURL, options: .atomic) }
